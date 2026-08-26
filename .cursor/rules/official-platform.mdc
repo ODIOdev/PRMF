@@ -1,0 +1,28 @@
+---
+description: Official GitHub, Vercel, and Supabase targets for PRMF — always use these, never create alternatives
+alwaysApply: true
+---
+
+# Official PRMF platform targets
+
+This repo has one official Git remote, one Vercel account/project, and one Supabase project. Use only these.
+
+## Git / pushes
+
+- Remote `origin` is `https://github.com/ODIOdev/PRMF.git`
+- Default branch is `main`
+- Push only to this remote. Do not add other remotes or create a different GitHub repo.
+
+## Deploy
+
+- Vercel account/team: [over-drive0s](https://vercel.com/over-drive0s)
+- Vercel project name: `prmf`
+- Git integration is `ODIOdev/PRMF`
+- Deploy only to this project. Do not create another Vercel team or project.
+
+## SQL / backend
+
+- Supabase URL: `https://rdzmpabrvkslfvkdbivj.supabase.co`
+- Project ref: `rdzmpabrvkslfvkdbivj`
+- All migrations, SQL, and client env (`NEXT_PUBLIC_SUPABASE_URL`) must use this project.
+- Do **not** use `https://xrwvaelhmibhslmfvxrs.supabase.co` or any other Supabase project.
