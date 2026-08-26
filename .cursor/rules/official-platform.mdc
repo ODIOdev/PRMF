@@ -15,9 +15,10 @@ This repo has one official Git remote, one Vercel account/project, and one Supab
 
 ## Deploy
 
-- Vercel account/team: [over-drive0s](https://vercel.com/over-drive0s)
-- Vercel project name: `prmf`
-- Git integration is `ODIOdev/PRMF`
+- Vercel dashboard: [over-drive0s](https://vercel.com/over-drive0s)
+- Vercel team: `over-drive0s-projects` (`team_J8yyrRPgIwzEfvkmiVpanpcP`)
+- Vercel project: `prmf` (`prj_1cTXJz2wT7AUsUktjHih5GtM7lDY`) at [vercel.com/over-drive0s-projects/prmf](https://vercel.com/over-drive0s-projects/prmf)
+- Git integration is `ODIOdev/PRMF` (requires the [Vercel GitHub App](https://github.com/apps/vercel) installed on the ODIOdev account)
 - Deploy only to this project. Do not create another Vercel team or project.
 
 ## SQL / backend
