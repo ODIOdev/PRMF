@@ -1,8 +1,31 @@
-node_modules/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# env
 .env
 .env.*
 !.env.example
+
+# vercel
 .vercel
-.DS_Store
-*.log
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# supabase
 supabase/.temp/
