@@ -22,7 +22,7 @@ export function LeadForm({
   const [state, action, pending] = useActionState(submitPublicLead, initial);
 
   return (
-    <form action={action} className="space-y-4 rounded-2xl border bg-white p-5">
+    <form action={action} className="space-y-4 border border-chrome bg-white p-5">
       <input type="hidden" name="type" value={type} />
       {brand ? <input type="hidden" name="brand" value={brand} /> : null}
       {vehicleId ? <input type="hidden" name="vehicleId" value={vehicleId} /> : null}
@@ -40,9 +40,20 @@ export function LeadForm({
         <input type="checkbox" name="emailConsent" className="mt-1" />
         You may email me about this request. SMS sending is not enabled yet.
       </label>
+      <p className="text-xs text-muted-foreground">
+        By submitting, you agree to our{" "}
+        <a href="/privacy" className="font-medium text-ford hover:underline">
+          Privacy Policy
+        </a>{" "}
+        and{" "}
+        <a href="/terms" className="font-medium text-ford hover:underline">
+          Terms of Use
+        </a>
+        .
+      </p>
       {state.error ? <p className="text-sm text-destructive">{state.error}</p> : null}
       {state.ok ? <p className="text-sm text-green-700">Received. A Premier advisor will follow up shortly.</p> : null}
-      <Button type="submit" disabled={pending} className="w-full">
+      <Button type="submit" disabled={pending} className="h-11 w-full">
         {pending ? "Sending…" : "Request information"}
       </Button>
     </form>
@@ -63,7 +74,7 @@ function Field({
   return (
     <div className="space-y-2">
       <Label htmlFor={name}>{label}</Label>
-      <Input id={name} name={name} type={type} required={required} />
+      <Input id={name} name={name} type={type} required={required} className="h-11 rounded-sm" />
     </div>
   );
 }

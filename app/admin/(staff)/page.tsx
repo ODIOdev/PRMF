@@ -28,7 +28,7 @@ export default async function AdminHomePage() {
         <Stat label="Open tasks" value={tasks?.length ?? 0} />
       </div>
       <div className="mt-8 grid gap-6 md:grid-cols-2">
-        <div className="rounded-2xl border bg-white p-5">
+        <div className="border border-chrome bg-white p-5">
           <h2 className="font-semibold">Leads by stage</h2>
           <ul className="mt-3 space-y-1 text-sm">
             {Object.entries(byStage).map(([stage, count]) => (
@@ -39,7 +39,7 @@ export default async function AdminHomePage() {
             ))}
           </ul>
         </div>
-        <div className="rounded-2xl border bg-white p-5">
+        <div className="border border-chrome bg-white p-5">
           <h2 className="font-semibold">Leads by brand</h2>
           <ul className="mt-3 space-y-1 text-sm">
             {Object.entries(byBrand).map(([brand, count]) => (
@@ -57,7 +57,7 @@ export default async function AdminHomePage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl border bg-white p-5">
+    <div className="border border-chrome bg-white p-5">
       <p className="text-sm text-muted-foreground">{label}</p>
       <p className="mt-1 text-3xl font-semibold">{value}</p>
     </div>

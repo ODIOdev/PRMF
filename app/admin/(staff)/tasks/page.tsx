@@ -7,7 +7,7 @@ export default async function TasksPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Follow-ups</h1>
-      <form action={createTask} className="mt-6 flex flex-wrap gap-3 rounded-2xl border bg-white p-4">
+      <form action={createTask} className="mt-6 flex flex-wrap gap-3 border border-chrome bg-white p-4">
         <input name="title" placeholder="Task title" className="h-10 flex-1 rounded-lg border px-3" required />
         <input name="due_at" type="datetime-local" className="h-10 rounded-lg border px-3" />
         <button className="h-10 rounded-lg bg-primary px-4 text-sm text-primary-foreground">Add task</button>

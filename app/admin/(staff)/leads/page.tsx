@@ -21,7 +21,7 @@ export default async function LeadsPage() {
       <h1 className="text-2xl font-semibold">Lead pipeline</h1>
       <div className="mt-6 grid gap-4 overflow-x-auto md:grid-cols-3 xl:grid-cols-6">
         {grouped.map((column) => (
-          <div key={column.stage} className="rounded-2xl border bg-white p-3">
+          <div key={column.stage} className="border border-chrome bg-white p-3">
             <p className="mb-3 text-sm font-semibold capitalize">
               {column.stage} ({column.items.length})
             </p>

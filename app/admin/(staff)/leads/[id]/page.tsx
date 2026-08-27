@@ -20,7 +20,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
-      <div className="rounded-2xl border bg-white p-6">
+      <div className="border border-chrome bg-white p-6">
         <h1 className="text-2xl font-semibold">
           {customer?.first_name} {customer?.last_name}
         </h1>
@@ -32,7 +32,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
         </p>
         <p className="mt-4 text-sm">{lead.message}</p>
       </div>
-      <div className="rounded-2xl border bg-white p-6">
+      <div className="border border-chrome bg-white p-6">
         <h2 className="font-semibold">Notes</h2>
         <form action={addActivity} className="mt-3 space-y-2">
           <input type="hidden" name="leadId" value={id} />

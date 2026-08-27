@@ -7,7 +7,7 @@ export default async function AppointmentsPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold">Appointments</h1>
-      <form action={createAppointment} className="mt-6 grid gap-3 rounded-2xl border bg-white p-4 md:grid-cols-4">
+      <form action={createAppointment} className="mt-6 grid gap-3 border border-chrome bg-white p-4 md:grid-cols-4">
         <select name="type" className="h-10 rounded-lg border px-3">
           <option value="test_drive">Test drive</option>
           <option value="service">Service</option>

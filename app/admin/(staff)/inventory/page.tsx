@@ -17,9 +17,9 @@ export default async function AdminInventoryPage() {
           Add vehicle
         </Link>
       </div>
-      <div className="mt-6 overflow-x-auto rounded-2xl border bg-white">
+      <div className="mt-6 overflow-x-auto border border-chrome bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="border-b bg-zinc-50">
+          <thead className="border-b bg-muted">
             <tr>
               <th className="px-3 py-2">Vehicle</th>
               <th className="px-3 py-2">Stock</th>

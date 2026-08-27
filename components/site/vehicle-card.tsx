@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { Vehicle } from "@/lib/types";
 import { formatUsd, monthlyEstimate } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
 
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const image = vehicle.vehicle_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
@@ -13,8 +12,8 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const monthly = monthlyEstimate(price ? Number(price) : null);
 
   return (
-    <Link href={href} className="group overflow-hidden rounded-2xl border bg-white shadow-sm transition hover:shadow-md">
-      <div className="relative aspect-[16/10] bg-zinc-100">
+    <Link href={href} className="group border border-chrome bg-white transition hover:border-ford">
+      <div className="relative aspect-[16/10] bg-muted">
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -26,20 +25,26 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Photo coming soon</div>
         )}
         <div className="absolute left-3 top-3 flex gap-2">
-          <Badge className={vehicle.brand === "lincoln" ? "bg-lincoln text-white" : "bg-ford text-white"}>
+          <span
+            className={`px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white ${
+              vehicle.brand === "lincoln" ? "bg-lincoln" : "bg-ford"
+            }`}
+          >
             {vehicle.brand}
-          </Badge>
-          <Badge variant="secondary">{vehicle.condition}</Badge>
+          </span>
+          <span className="bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground">
+            {vehicle.condition}
+          </span>
         </div>
       </div>
       <div className="space-y-3 p-4">
         <div>
-          <p className="text-lg font-semibold leading-tight">
+          <p className="text-lg font-semibold leading-tight tracking-tight">
             {vehicle.year} {vehicle.make} {vehicle.model}
           </p>
-          <p className="text-sm text-muted-foreground">{vehicle.trim || vehicle.body_style || vehicle.stock_number}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{vehicle.trim || vehicle.body_style || vehicle.stock_number}</p>
         </div>
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="grid grid-cols-2 gap-2 border-t border-chrome pt-3 text-sm">
           <PriceCell label="MSRP" value={formatUsd(vehicle.msrp ? Number(vehicle.msrp) : null)} />
           <PriceCell label="Discount" value={discount ? formatUsd(Number(discount)) : "—"} />
           <PriceCell label="Incentives" value="See details" />
@@ -64,8 +69,8 @@ function PriceCell({
 }) {
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className={emphasize ? "font-semibold" : ""}>{value}</p>
+      <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground">{label}</p>
+      <p className={emphasize ? "font-semibold text-ford" : ""}>{value}</p>
     </div>
   );
 }

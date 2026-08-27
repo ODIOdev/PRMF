@@ -16,16 +16,16 @@ export default async function VehiclePage({ params }: { params: Promise<{ vin: s
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <p className="text-sm uppercase tracking-wide text-muted-foreground">
+      <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-ford">
         {titleCase(vehicle.brand)} · {titleCase(vehicle.condition)} · {titleCase(vehicle.status)}
       </p>
-      <h1 className="mt-2 text-3xl font-semibold">
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight">
         {vehicle.year} {vehicle.make} {vehicle.model}
       </h1>
-      <p className="text-muted-foreground">{vehicle.trim}</p>
+      <p className="text-sm text-muted-foreground">{vehicle.trim}</p>
       <div className="mt-8 grid gap-10 lg:grid-cols-[1.4fr_0.8fr]">
         <div>
-          <div className="overflow-hidden rounded-2xl bg-zinc-100">
+          <div className="overflow-hidden border border-chrome bg-muted">
             {images[0] ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={images[0].url} alt={images[0].alt ?? ""} className="w-full object-cover" />

@@ -17,7 +17,7 @@ export function VehicleForm({
   vehicle?: Record<string, string | number | null | undefined> & { id?: string };
 }) {
   return (
-    <form action={saveVehicle} className="grid gap-4 rounded-2xl border bg-white p-6 md:grid-cols-2">
+    <form action={saveVehicle} className="grid gap-4 border border-chrome bg-white p-6 md:grid-cols-2">
       {vehicle?.id ? <input type="hidden" name="id" value={vehicle.id} /> : null}
       {fields.map(([name, label]) => (
         <label key={name} className="grid gap-1 text-sm">

@@ -4,19 +4,23 @@ import { formatPhoneHref } from "@/lib/format";
 
 export default function ContactPage() {
   return (
-    <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2">
+    <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-2">
       <div>
-        <h1 className="text-3xl font-semibold">Contact</h1>
+        <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-ford">Contact</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight">Contact</h1>
         <ul className="mt-6 space-y-2 text-sm">
           <li>
             Sales:{" "}
-            <a className="text-primary" href={formatPhoneHref(dealership.phones.sales)}>
+            <a className="font-medium text-ford hover:underline" href={formatPhoneHref(dealership.phones.sales)}>
               {dealership.phones.sales}
             </a>
           </li>
           <li>Parts: {dealership.phones.parts}</li>
           <li>
-            Email: <a href={`mailto:${dealership.email}`}>{dealership.email}</a>
+            Email:{" "}
+            <a className="font-medium text-ford hover:underline" href={`mailto:${dealership.email}`}>
+              {dealership.email}
+            </a>
           </li>
         </ul>
         <ul className="mt-6 text-sm text-muted-foreground">
