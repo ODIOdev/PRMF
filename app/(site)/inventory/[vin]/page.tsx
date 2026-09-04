@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getVehicleByVin } from "@/lib/inventory";
 import { formatUsd, monthlyEstimate, titleCase } from "@/lib/format";
 import { LeadForm } from "@/components/site/lead-form";
+import { getDictionary } from "@/lib/get-dictionary";
 
 export default async function VehiclePage({ params }: { params: Promise<{ vin: string }> }) {
   const { vin } = await params;
@@ -13,11 +14,13 @@ export default async function VehiclePage({ params }: { params: Promise<{ vin: s
     vehicle.discount ??
     (vehicle.msrp && vehicle.internet_price ? Number(vehicle.msrp) - Number(vehicle.internet_price) : null);
   const monthly = monthlyEstimate(price ? Number(price) : null);
+  const { t } = await getDictionary();
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-ford">
-        {titleCase(vehicle.brand)} · {titleCase(vehicle.condition)} · {titleCase(vehicle.status)}
+        {titleCase(vehicle.brand)} · {t.condition[vehicle.condition] ?? titleCase(vehicle.condition)} ·{" "}
+        {t.status[vehicle.status] ?? titleCase(vehicle.status)}
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">
         {vehicle.year} {vehicle.make} {vehicle.model}
@@ -32,30 +35,30 @@ export default async function VehiclePage({ params }: { params: Promise<{ vin: s
             ) : null}
           </div>
           <div className="mt-6 grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-            <Spec label="MSRP" value={formatUsd(vehicle.msrp ? Number(vehicle.msrp) : null)} />
-            <Spec label="Discount" value={discount ? formatUsd(Number(discount)) : "—"} />
-            <Spec label="Incentives" value="Ask an advisor" />
-            <Spec label="Est. price" value={formatUsd(price ? Number(price) : null)} />
+            <Spec label={t.msrp} value={formatUsd(vehicle.msrp ? Number(vehicle.msrp) : null)} />
+            <Spec label={t.discount} value={discount ? formatUsd(Number(discount)) : "—"} />
+            <Spec label={t.incentives} value={t.askAdvisor} />
+            <Spec label={t.estPrice} value={formatUsd(price ? Number(price) : null)} />
           </div>
           {monthly ? (
             <p className="mt-3 text-sm text-muted-foreground">
-              Display-only estimate: {formatUsd(monthly)}/mo at 6.9% APR for 72 months. Not a credit offer.
+              {t.monthlyDisclaimer(formatUsd(monthly))}
             </p>
           ) : null}
           <dl className="mt-8 grid gap-3 text-sm sm:grid-cols-2">
-            <Spec label="VIN" value={vehicle.vin} />
-            <Spec label="Stock" value={vehicle.stock_number} />
-            <Spec label="Engine" value={vehicle.engine} />
-            <Spec label="Transmission" value={vehicle.transmission} />
-            <Spec label="Drivetrain" value={vehicle.drivetrain} />
-            <Spec label="Exterior" value={vehicle.exterior_color} />
-            <Spec label="Interior" value={vehicle.interior_color} />
-            <Spec label="MPG" value={vehicle.mpg_city ? `${vehicle.mpg_city}/${vehicle.mpg_hwy}` : null} />
-            <Spec label="Mileage" value={vehicle.mileage ? `${vehicle.mileage.toLocaleString()} mi` : "New"} />
+            <Spec label={t.spec.vin} value={vehicle.vin} />
+            <Spec label={t.spec.stock} value={vehicle.stock_number} />
+            <Spec label={t.spec.engine} value={vehicle.engine} />
+            <Spec label={t.spec.transmission} value={vehicle.transmission} />
+            <Spec label={t.spec.drivetrain} value={vehicle.drivetrain} />
+            <Spec label={t.spec.exterior} value={vehicle.exterior_color} />
+            <Spec label={t.spec.interior} value={vehicle.interior_color} />
+            <Spec label={t.spec.mpg} value={vehicle.mpg_city ? `${vehicle.mpg_city}/${vehicle.mpg_hwy}` : null} />
+            <Spec label={t.spec.mileage} value={vehicle.mileage ? t.miles(vehicle.mileage.toLocaleString()) : t.spec.newMileage} />
           </dl>
           {vehicle.vehicle_ratings?.length ? (
             <div className="mt-8">
-              <h2 className="font-semibold">Ratings on file</h2>
+              <h2 className="font-semibold">{t.ratings}</h2>
               <ul className="mt-2 text-sm text-muted-foreground">
                 {vehicle.vehicle_ratings.map((rating) => (
                   <li key={rating.id}>

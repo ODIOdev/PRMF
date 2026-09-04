@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import type { Vehicle } from "@/lib/types";
 import { formatUsd, monthlyEstimate } from "@/lib/format";
+import { useLocale } from "@/components/site/locale-provider";
 
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
+  const { t } = useLocale();
   const image = vehicle.vehicle_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
   const price = vehicle.internet_price ?? vehicle.msrp;
   const discount =
@@ -22,7 +26,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Photo coming soon</div>
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">{t.photoSoon}</div>
         )}
         <div className="absolute left-3 top-3 flex gap-2">
           <span
@@ -33,7 +37,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
             {vehicle.brand}
           </span>
           <span className="bg-white px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-foreground">
-            {vehicle.condition}
+            {t.condition[vehicle.condition] ?? vehicle.condition}
           </span>
         </div>
       </div>
@@ -45,13 +49,13 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           <p className="mt-1 text-sm text-muted-foreground">{vehicle.trim || vehicle.body_style || vehicle.stock_number}</p>
         </div>
         <div className="grid grid-cols-2 gap-2 border-t border-chrome pt-3 text-sm">
-          <PriceCell label="MSRP" value={formatUsd(vehicle.msrp ? Number(vehicle.msrp) : null)} />
-          <PriceCell label="Discount" value={discount ? formatUsd(Number(discount)) : "—"} />
-          <PriceCell label="Incentives" value="See details" />
-          <PriceCell label="Est. price" value={formatUsd(price ? Number(price) : null)} emphasize />
+          <PriceCell label={t.msrp} value={formatUsd(vehicle.msrp ? Number(vehicle.msrp) : null)} />
+          <PriceCell label={t.discount} value={discount ? formatUsd(Number(discount)) : "—"} />
+          <PriceCell label={t.incentives} value={t.seeDetails} />
+          <PriceCell label={t.estPrice} value={formatUsd(price ? Number(price) : null)} emphasize />
         </div>
         {monthly ? (
-          <p className="text-xs text-muted-foreground">About {formatUsd(monthly)}/mo estimated at 6.9% for 72 months.</p>
+          <p className="text-xs text-muted-foreground">{t.monthlyEst(formatUsd(monthly))}</p>
         ) : null}
       </div>
     </Link>

@@ -5,22 +5,14 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ChevronDown, Menu, Search, X } from "lucide-react";
 import type { NavItem } from "@/lib/nav";
+import { translateNav } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-
-function localizedItems(items: NavItem[], pathname: string): NavItem[] {
-  const onSpanish = pathname === "/espanol" || pathname.startsWith("/espanol/");
-  return items.map((item) =>
-    item.id === "espanol"
-      ? onSpanish
-        ? { ...item, label: "English", href: "/" }
-        : { ...item, label: "Español", href: "/espanol" }
-      : item,
-  );
-}
+import { LocaleSwitch, useLocale } from "@/components/site/locale-provider";
 
 export function MegaNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
-  const navItems = localizedItems(items, pathname);
+  const { locale, t } = useLocale();
+  const navItems = translateNav(items, locale);
   const [openId, setOpenId] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const desktopRef = useRef<HTMLDivElement>(null);
@@ -68,6 +60,11 @@ export function MegaNav({ items }: { items: NavItem[] }) {
                 {item.label}
                 <ChevronDown className={cn("mega-chevron size-4", openId === item.id && "is-open")} />
               </button>
+            ) : item.id === "espanol" ? (
+              <LocaleSwitch
+                key={item.id}
+                className="inline-flex h-12 flex-1 items-center justify-center px-2 text-base font-medium text-foreground/80 hover:text-ford"
+              />
             ) : (
               <Link
                 key={item.id}
@@ -122,7 +119,7 @@ export function MegaNav({ items }: { items: NavItem[] }) {
           aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X className="size-4" /> : <Menu className="size-4" />}
-          Menu
+          {t.menu}
         </button>
       </div>
 
@@ -130,7 +127,7 @@ export function MegaNav({ items }: { items: NavItem[] }) {
         <div className="absolute left-0 right-0 top-full z-50 max-h-[70vh] overflow-y-auto border-b border-chrome bg-white lg:hidden">
           <form action="/inventory" className="border-b border-chrome p-3">
             <label htmlFor="mobile-inventory-search" className="sr-only">
-              Search inventory
+              {t.searchInventory}
             </label>
             <div className="flex h-10 items-center border border-chrome bg-[#f7f8fa] focus-within:border-ford">
               <Search className="ml-2.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden />
@@ -138,14 +135,14 @@ export function MegaNav({ items }: { items: NavItem[] }) {
                 id="mobile-inventory-search"
                 name="q"
                 type="search"
-                placeholder="Search inventory, model, or VIN"
+                placeholder={t.searchPlaceholder}
                 className="h-full min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground"
               />
               <button
                 type="submit"
                 className="h-full bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-[#002654]"
               >
-                Search
+                {t.search}
               </button>
             </div>
           </form>
@@ -159,6 +156,11 @@ export function MegaNav({ items }: { items: NavItem[] }) {
 }
 
 function MobileSection({ item, onNavigate }: { item: NavItem; onNavigate: () => void }) {
+  if (item.id === "espanol") {
+    return (
+      <LocaleSwitch className="block border-b border-chrome px-4 py-3 text-sm" />
+    );
+  }
   if (!item.columns?.length) {
     return (
       <Link href={item.href ?? "/"} className="block border-b border-chrome px-4 py-3 text-sm" onClick={onNavigate}>

@@ -1,39 +1,15 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Clock, MapPin } from "lucide-react";
 import { dealership } from "@/lib/dealership";
 import { PremierLogo } from "@/components/site/logo";
+import { SocialLinks } from "@/components/site/social-links";
+import { LocaleSwitch } from "@/components/site/locale-provider";
+import { compactHourDays, formatHourTime } from "@/lib/i18n";
+import { getDictionary } from "@/lib/get-dictionary";
 
 function mapsUrl(address: string, city: string, state: string, zip: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${address}, ${city}, ${state} ${zip}`)}`;
 }
-
-const shopLinks = [
-  { label: "New Ford inventory", href: "/inventory?brand=ford&condition=new" },
-  { label: "Used inventory", href: "/inventory?condition=used" },
-  { label: "Shop Lincoln", href: "/lincoln" },
-  { label: "Ford EVs", href: "/inventory?brand=ford&ev=1" },
-  { label: "Commercial", href: "/commercial" },
-  { label: "Value your trade", href: "/trade" },
-];
-
-const serviceLinks = [
-  { label: "Schedule service", href: "/service/schedule" },
-  { label: "Service center", href: "/service" },
-  { label: "Parts", href: "/parts" },
-  { label: "Oil change", href: "/service/oil" },
-  { label: "Tires", href: "/service/tires" },
-  { label: "FordProtect", href: "/service/fordprotect" },
-];
-
-const companyLinks = [
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-  { label: "Directions", href: "/about/directions" },
-  { label: "Employment", href: "/about/employment" },
-  { label: "Finance", href: "/finance" },
-  { label: "Apply for credit", href: "/finance/apply" },
-];
 
 function FooterHeading({ children }: { children: ReactNode }) {
   return (
@@ -49,7 +25,8 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
   );
 }
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const { locale, t } = await getDictionary();
   const year = new Date().getFullYear();
   const showroomMaps = mapsUrl(
     dealership.showroom.address,
@@ -63,9 +40,33 @@ export function SiteFooter() {
     dealership.serviceCenter.state,
     dealership.serviceCenter.zip,
   );
+  const shopLinks = [
+    { label: t.footer.newFord, href: "/inventory?brand=ford&condition=new" },
+    { label: t.footer.usedInv, href: "/inventory?condition=used" },
+    { label: t.footer.shopLincoln, href: "/lincoln" },
+    { label: t.footer.fordEvs, href: "/inventory?brand=ford&ev=1" },
+    { label: t.footer.commercial, href: "/commercial" },
+    { label: t.footer.trade, href: "/trade" },
+  ];
+  const serviceLinks = [
+    { label: t.footer.scheduleService, href: "/service/schedule" },
+    { label: t.footer.serviceCenter, href: "/service" },
+    { label: t.footer.parts, href: "/parts" },
+    { label: t.footer.oil, href: "/service/oil" },
+    { label: t.footer.tires, href: "/service/tires" },
+    { label: t.footer.fordProtect, href: "/service/fordprotect" },
+  ];
+  const companyLinks = [
+    { label: t.footer.about, href: "/about" },
+    { label: t.footer.contact, href: "/contact" },
+    { label: t.footer.directions, href: "/about/directions" },
+    { label: t.footer.employment, href: "/about/employment" },
+    { label: t.footer.finance, href: "/finance" },
+    { label: t.footer.apply, href: "/finance/apply" },
+  ];
 
   return (
-    <footer className="mt-auto bg-ford text-white">
+    <footer data-chat-contrast="dark" className="mt-auto bg-ford text-white">
       <div className="border-b border-white/10">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 md:flex-row md:items-center md:justify-between">
           <div>
@@ -83,9 +84,9 @@ export function SiteFooter() {
         </div>
       </div>
 
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mx-auto grid max-w-6xl items-start gap-8 px-4 py-8 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <FooterHeading>Shop</FooterHeading>
+          <FooterHeading>{t.footer.showroom}</FooterHeading>
           <ul className="mt-4 space-y-1">
             {shopLinks.map((link) => (
               <li key={link.href + link.label}>
@@ -93,10 +94,11 @@ export function SiteFooter() {
               </li>
             ))}
           </ul>
+          <SocialLinks variant="dark" className="mt-4" />
         </div>
 
         <div>
-          <FooterHeading>Service &amp; parts</FooterHeading>
+          <FooterHeading>{t.footer.serviceParts}</FooterHeading>
           <ul className="mt-4 space-y-1">
             {serviceLinks.map((link) => (
               <li key={link.href + link.label}>
@@ -107,7 +109,7 @@ export function SiteFooter() {
         </div>
 
         <div>
-          <FooterHeading>Dealership</FooterHeading>
+          <FooterHeading>{t.footer.dealership}</FooterHeading>
           <ul className="mt-4 space-y-1">
             {companyLinks.map((link) => (
               <li key={link.href}>
@@ -115,47 +117,46 @@ export function SiteFooter() {
               </li>
             ))}
             <li>
-              <FooterLink href="/espanol">Español</FooterLink>
+              <LocaleSwitch className="block py-0.5 text-sm text-white/80 hover:text-white" />
+            </li>
+            <li>
+              <FooterLink href="/admin">{t.footer.admin}</FooterLink>
             </li>
           </ul>
         </div>
 
         <div>
-          <FooterHeading>Hours &amp; locations</FooterHeading>
-          <a
-            href={showroomMaps}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 flex gap-2 text-sm text-white/80 hover:text-white"
-          >
-            <MapPin className="mt-0.5 size-3.5 shrink-0 text-white/55" />
-            <span>
-              <span className="block font-medium text-white">Showroom</span>
-              {dealership.showroom.address}
-              <br />
-              {dealership.showroom.city}, {dealership.showroom.state} {dealership.showroom.zip}
-            </span>
-          </a>
-          <a
-            href={serviceMaps}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 flex gap-2 text-sm text-white/80 hover:text-white"
-          >
-            <MapPin className="mt-0.5 size-3.5 shrink-0 text-white/55" />
-            <span>
-              <span className="block font-medium text-white">Service &amp; parts</span>
-              {dealership.serviceCenter.address}
-              <br />
-              {dealership.serviceCenter.city}, {dealership.serviceCenter.state} {dealership.serviceCenter.zip}
-            </span>
-          </a>
-          <div className="mt-4 flex gap-2 text-sm text-white/80">
-            <Clock className="mt-0.5 size-3.5 shrink-0 text-white/55" />
-            <ul className="space-y-0.5">
+          <FooterHeading>{t.footer.hoursLocations}</FooterHeading>
+          <div className="mt-4 text-sm">
+            <div className="grid grid-cols-2 gap-4">
+              <a href={showroomMaps} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white">
+                <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-white/45">
+                  {t.showroom}
+                </span>
+                <span className="mt-1.5 block leading-5">
+                  {dealership.showroom.address}
+                  <span className="block text-white/50">
+                    {dealership.showroom.city}, {dealership.showroom.state} {dealership.showroom.zip}
+                  </span>
+                </span>
+              </a>
+              <a href={serviceMaps} target="_blank" rel="noreferrer" className="text-white/80 hover:text-white">
+                <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-white/45">
+                  {t.serviceParts}
+                </span>
+                <span className="mt-1.5 block leading-5">
+                  {dealership.serviceCenter.address}
+                  <span className="block text-white/50">
+                    {dealership.serviceCenter.city}, {dealership.serviceCenter.state} {dealership.serviceCenter.zip}
+                  </span>
+                </span>
+              </a>
+            </div>
+            <ul className="mt-4 space-y-1 border-t border-white/10 pt-4">
               {dealership.hours.map((row) => (
-                <li key={row.days}>
-                  <span className="text-white/55">{row.days}</span> {row.time}
+                <li key={row.days} className="flex justify-between gap-3 whitespace-nowrap leading-5">
+                  <span className="text-white/45">{compactHourDays(row.days, locale)}</span>
+                  <span className="tabular-nums text-white/80">{formatHourTime(row.time)}</span>
                 </li>
               ))}
             </ul>
@@ -166,15 +167,15 @@ export function SiteFooter() {
       <div className="bg-[#002654]">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-5 text-xs leading-5 text-white/45 md:flex-row md:items-center md:justify-between">
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span>© {year} Premier Brooklyn. All rights reserved.</span>
+            <span>{t.footer.rights(year)}</span>
             <Link href="/privacy" className="hover:text-white">
-              Privacy Policy
+              {t.privacy}
             </Link>
             <Link href="/terms" className="hover:text-white">
-              Terms of Use
+              {t.terms}
             </Link>
           </p>
-          <p>Prices exclude tax, title, license, and dealer fees. Vehicles subject to prior sale.</p>
+          <p>{t.footer.prices}</p>
         </div>
       </div>
     </footer>

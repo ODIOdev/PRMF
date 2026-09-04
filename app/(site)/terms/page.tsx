@@ -3,6 +3,7 @@ import Link from "next/link";
 import { dealership } from "@/lib/dealership";
 import { formatPhoneHref } from "@/lib/format";
 import { LegalPage, LegalSection } from "@/components/site/legal-page";
+import { getDictionary } from "@/lib/get-dictionary";
 
 export const metadata: Metadata = {
   title: "Terms of Use",
@@ -10,9 +11,10 @@ export const metadata: Metadata = {
     "Terms for using the Premier Brooklyn website, an authorized Ford and Lincoln dealer in Brooklyn, NY.",
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const { t } = await getDictionary();
   return (
-    <LegalPage title="Terms of Use" updated="August 26, 2026">
+    <LegalPage title={t.legal.termsTitle} updated="August 26, 2026">
       <LegalSection title="The dealership and this site">
         <p>
           These terms govern your use of the Premier Brooklyn website. {dealership.name} is an independently owned

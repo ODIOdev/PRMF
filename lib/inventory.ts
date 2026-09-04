@@ -14,6 +14,31 @@ export type InventoryFilters = {
   body?: "coupe" | "suv" | "truck" | "van" | "wagon";
 };
 
+function sanitizeSearchTerm(q: string) {
+  return q.replace(/[%*,()]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function searchOrFilter(term: string) {
+  const variants = new Set([term]);
+  const compact = term.replace(/[\s-]/g, "");
+  const hyphenated = compact.replace(/([a-zA-Z]+)(\d)/, "$1-$2");
+  if (hyphenated !== term) variants.add(hyphenated);
+  if (compact !== term) variants.add(compact);
+
+  const clauses = [...variants].flatMap((value) => [
+    `make.ilike.%${value}%`,
+    `model.ilike.%${value}%`,
+    `trim.ilike.%${value}%`,
+    `stock_number.ilike.%${value}%`,
+    `vin.ilike.%${value}%`,
+    `body_style.ilike.%${value}%`,
+  ]);
+  if (/^\d{4}$/.test(term)) clauses.push(`year.eq.${term}`);
+  const brand = term.toLowerCase();
+  if (brand === "ford" || brand === "lincoln") clauses.push(`brand.eq.${brand}`);
+  return clauses.join(",");
+}
+
 export async function getVehicles(filters: InventoryFilters = {}) {
   const supabase = await createClient();
   let query = supabase
@@ -52,15 +77,40 @@ export async function getVehicles(filters: InventoryFilters = {}) {
   if (filters.body === "wagon") {
     query = query.or("model.ilike.%Passenger%,body_style.ilike.%wagon%");
   }
-  if (filters.q) {
-    query = query.or(
-      `make.ilike.%${filters.q}%,model.ilike.%${filters.q}%,trim.ilike.%${filters.q}%,stock_number.ilike.%${filters.q}%,vin.ilike.%${filters.q}%`,
-    );
-  }
+  const q = filters.q ? sanitizeSearchTerm(filters.q) : "";
+  if (q) query = query.or(searchOrFilter(q));
 
   const { data, error } = await query;
   if (error) throw error;
   return (data ?? []) as Vehicle[];
+}
+
+export async function searchVehicles(
+  q: string,
+  filters: Pick<InventoryFilters, "brand" | "condition"> = {},
+  limit = 8,
+) {
+  const term = sanitizeSearchTerm(q);
+  if (!term) return [];
+
+  const supabase = await createClient();
+  let query = supabase
+    .from("vehicles")
+    .select("id, vin, year, make, model, trim, brand, condition, stock_number, internet_price, msrp")
+    .in("status", ["in_stock", "in_transit"])
+    .or(searchOrFilter(term))
+    .order("year", { ascending: false })
+    .limit(limit);
+
+  if (filters.brand) query = query.eq("brand", filters.brand);
+  if (filters.condition) query = query.eq("condition", filters.condition);
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return (data ?? []) as Pick<
+    Vehicle,
+    "id" | "vin" | "year" | "make" | "model" | "trim" | "brand" | "condition" | "stock_number" | "internet_price" | "msrp"
+  >[];
 }
 
 export async function getVehicleByVin(vin: string) {

@@ -64,7 +64,6 @@ export const sitePages: SitePage[] = [
   { slug: "about/blog", scrapedKey: "blog", leadType: "sales" },
   { slug: "about/reviews", scrapedKey: "reviews", leadType: "sales" },
   { slug: "about/write-a-review", scrapedKey: "write-a-review", leadType: "sales" },
-  { slug: "espanol", scrapedKey: "espanol", leadType: "sales" },
 ];
 
 const LOGO_BITS = ["98497be6e88ce324eaf7778a1b6658a4", "169f44c6d5ac4cec9a834d282ed20cc4"];

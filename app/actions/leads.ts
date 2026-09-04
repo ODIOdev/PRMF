@@ -17,7 +17,7 @@ export async function submitPublicLead(_prev: LeadState, formData: FormData): Pr
   const emailConsent = formData.get("emailConsent") === "on";
 
   if (!firstName || !lastName || !email || !phone) {
-    return { ok: false, error: "Please complete your contact details." };
+    return { ok: false, error: "incomplete" };
   }
 
   const supabase = createAdminClient();
@@ -34,6 +34,27 @@ export async function submitPublicLead(_prev: LeadState, formData: FormData): Pr
     p_sms_consent: false,
   });
 
-  if (error) return { ok: false, error: "We could not send that just now. Please call sales." };
+  if (error) return { ok: false, error: "send_failed" };
   return { ok: true };
+}
+
+export async function submitServiceSchedule(_prev: LeadState, formData: FormData): Promise<LeadState> {
+  const service = String(formData.get("service") ?? "").trim();
+  if (!service) return { ok: false, error: "no_service" };
+
+  const preferredDate = String(formData.get("preferredDate") ?? "").trim();
+  const preferredTime = String(formData.get("preferredTime") ?? "").trim();
+  const vehicle = String(formData.get("vehicle") ?? "").trim();
+  const notes = String(formData.get("notes") ?? "").trim();
+  const when = [preferredDate, preferredTime].filter(Boolean).join(", ");
+
+  formData.set("type", "service");
+  formData.set(
+    "message",
+    [`Service: ${service}`, when && `Preferred: ${when}`, vehicle && `Vehicle: ${vehicle}`, notes]
+      .filter(Boolean)
+      .join("\n"),
+  );
+
+  return submitPublicLead(_prev, formData);
 }

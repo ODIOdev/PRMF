@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { getDictionary } from "@/lib/get-dictionary";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -22,10 +23,11 @@ export const metadata: Metadata = {
     "Find your Ford or Lincoln in Brooklyn. Transparent pricing, fast financing, and service you can schedule online.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { t } = await getDictionary();
   return (
     <html
-      lang="en"
+      lang={t.htmlLang}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { dealership } from "@/lib/dealership";
 import { formatPhoneHref } from "@/lib/format";
 import { LegalPage, LegalSection } from "@/components/site/legal-page";
+import { getDictionary } from "@/lib/get-dictionary";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -10,9 +11,10 @@ export const metadata: Metadata = {
     "How Premier Brooklyn, your authorized Ford and Lincoln dealer, collects and uses information on this website.",
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const { t } = await getDictionary();
   return (
-    <LegalPage title="Privacy Policy" updated="August 26, 2026">
+    <LegalPage title={t.legal.privacyTitle} updated="August 26, 2026">
       <LegalSection title="Who we are">
         <p>
           This policy describes how {dealership.name} (“we,” “us”) handles information on this website. We are an

@@ -4,17 +4,19 @@ import { useState } from "react";
 import Link from "next/link";
 import { shopBodyTypes, shopModels, type BodyType } from "@/lib/shop-by-model";
 import { cn } from "@/lib/utils";
+import { useLocale } from "@/components/site/locale-provider";
 
 export function ShopByModel() {
   const [body, setBody] = useState<BodyType | null>(null);
+  const { t } = useLocale();
 
   return (
     <section className="border-b border-chrome bg-white">
       <div className="mx-auto max-w-6xl px-4 py-12">
         <div className="text-center">
-          <h2 className="text-3xl font-semibold tracking-tight">Search by model</h2>
+          <h2 className="text-3xl font-semibold tracking-tight">{t.searchByModel}</h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            Choose a body style, then pick the Ford that fits.
+            {t.searchByModelSub}
           </p>
         </div>
 
@@ -29,7 +31,7 @@ export function ShopByModel() {
                 : "bg-transparent text-neutral-700 hover:text-ford",
             )}
           >
-            All
+            {t.all}
           </button>
           {shopBodyTypes.map((type) => (
             <button
@@ -43,7 +45,7 @@ export function ShopByModel() {
                   : "bg-transparent text-neutral-700 hover:text-ford",
               )}
             >
-              {type}
+              {t.bodyTypes[type]}
             </button>
           ))}
         </div>
@@ -73,7 +75,7 @@ export function ShopByModel() {
                   />
                 </div>
                 <p className="mt-3 text-sm font-semibold">{model.name}</p>
-                <p className="mt-1 text-xs leading-5 text-muted-foreground">{model.description}</p>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">{t.models[model.name]}</p>
               </Link>
             );
           })}

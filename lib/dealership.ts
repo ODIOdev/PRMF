@@ -28,6 +28,12 @@ export const dealership = {
     { days: "Saturday", time: "9:00 AM – 6:00 PM" },
     { days: "Sunday", time: "11:00 AM – 5:00 PM" },
   ],
+  socials: [
+    { name: "Facebook", href: "https://www.facebook.com/PremierFordLincoln" },
+    { name: "X", href: "https://twitter.com/premierfordlinc" },
+    { name: "YouTube", href: "https://www.youtube.com/channel/UCwB4j5jJ3g000wNIj_Ce5Tg" },
+    { name: "LinkedIn", href: "https://www.linkedin.com/company/premier-ford-lincoln" },
+  ],
 } as const;
 
 export const brands = ["ford", "lincoln"] as const;
