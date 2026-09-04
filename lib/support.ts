@@ -1,7 +1,7 @@
 import { gateway, tool, stepCountIs } from "ai";
 import { z } from "zod";
 import { dealership } from "@/lib/dealership";
-import { formatUsd } from "@/lib/format";
+import { formatUsd, listingPrice } from "@/lib/format";
 import { searchVehicles } from "@/lib/inventory";
 
 export const supportModel = gateway("openai/gpt-4.1-mini");
@@ -54,7 +54,7 @@ export const supportTools = {
             model: vehicle.model,
             trim: vehicle.trim,
             condition: vehicle.condition,
-            price: formatUsd(vehicle.internet_price ?? vehicle.msrp),
+            price: formatUsd(listingPrice(vehicle)),
             href: `/inventory/${vehicle.vin ?? vehicle.id}`,
           })),
         };

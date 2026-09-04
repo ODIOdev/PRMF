@@ -14,6 +14,7 @@
   --color-ford-bright: var(--ford-bright);
   --color-lincoln: var(--lincoln);
   --color-lincoln-gold: var(--lincoln-gold);
+  --color-lincoln-gold-bright: var(--lincoln-gold-bright);
   --color-chrome: var(--chrome);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -58,6 +59,7 @@
   --ford-bright: #1b86c8;
   --lincoln: #1c1c1c;
   --lincoln-gold: #c4a574;
+  --lincoln-gold-bright: #edcf8c;
   --chrome: #c5c9ce;
   --background: #f4f6f8;
   --foreground: #0b1f3a;
@@ -125,6 +127,10 @@
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgb(255 255 255 / 10%);
   --sidebar-ring: #1b86c8;
+}
+
+.crm-desk {
+  --lincoln-gold: #edcf8c;
 }
 
 @layer base {

@@ -1,51 +1,64 @@
-import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
+import { createDeskClient } from "@/lib/admin/session";
+import {
+  INVENTORY_PAGE_SIZE,
+  INVENTORY_STATUSES,
+  InventoryDesk,
+  inventoryStatusView,
+  type InventoryLotRow,
+  type InventoryVehicle,
+} from "@/components/admin/inventory-desk";
 
-export default async function AdminInventoryPage() {
-  const supabase = await createClient();
-  const { data } = await supabase
+export default async function AdminInventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ brand?: string; condition?: string; status?: string; q?: string; aged?: string; page?: string }>;
+}) {
+  const params = await searchParams;
+  const supabase = await createDeskClient();
+  const status = inventoryStatusView(params.status);
+  const page = Math.max(1, Number(params.page) || 1);
+  const from = (page - 1) * INVENTORY_PAGE_SIZE;
+  const to = from + INVENTORY_PAGE_SIZE - 1;
+  const agedCutoff = new Date(Date.now() - 60 * 86_400_000).toISOString();
+
+  let query = supabase
     .from("vehicles")
-    .select("id, vin, year, make, model, brand, status, internet_price, stock_number")
-    .order("updated_at", { ascending: false })
-    .limit(200);
+    .select(
+      "id, vin, year, make, model, trim, brand, condition, status, internet_price, msrp, features, stock_number, created_at, mileage, exterior_color, vehicle_images(url, sort_order)",
+      { count: "exact" },
+    )
+    .range(from, to);
+
+  if (params.brand === "ford" || params.brand === "lincoln") query = query.eq("brand", params.brand);
+  if (params.condition === "new" || params.condition === "used" || params.condition === "cpo") {
+    query = query.eq("condition", params.condition);
+  }
+  if (params.aged === "1") {
+    query = query.eq("status", "in_stock").lte("created_at", agedCutoff);
+  } else if (status === "live") {
+    query = query.in("status", ["in_stock", "in_transit"]);
+  } else if (INVENTORY_STATUSES.includes(status as (typeof INVENTORY_STATUSES)[number])) {
+    query = query.eq("status", status);
+  }
+  if (params.q?.trim()) {
+    const q = params.q.replace(/[%*,()]/g, " ").replace(/\s+/g, " ").trim();
+    if (q) query = query.or(`make.ilike.%${q}%,model.ilike.%${q}%,vin.ilike.%${q}%,stock_number.ilike.%${q}%`);
+  }
+
+  const liveView = params.aged === "1" || status === "live" || status === "in_stock" || status === "in_transit";
+  query = liveView ? query.order("created_at", { ascending: true }) : query.order("updated_at", { ascending: false });
+
+  const [{ data: lot }, { data, count }] = await Promise.all([
+    supabase.from("vehicles").select("id, brand, status, condition, created_at, internet_price, msrp, features, year, make, model, trim, vin, stock_number"),
+    query,
+  ]);
 
   return (
-    <div>
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Inventory</h1>
-        <Link href="/admin/inventory/new" className="rounded-lg bg-primary px-3 py-2 text-sm text-primary-foreground">
-          Add vehicle
-        </Link>
-      </div>
-      <div className="mt-6 overflow-x-auto border border-chrome bg-white">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-muted">
-            <tr>
-              <th className="px-3 py-2">Vehicle</th>
-              <th className="px-3 py-2">Stock</th>
-              <th className="px-3 py-2">Brand</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2">Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data ?? []).map((row) => (
-              <tr key={row.id} className="border-b last:border-0">
-                <td className="px-3 py-2">
-                  <Link href={`/admin/inventory/${row.id}`} className="font-medium hover:underline">
-                    {row.year} {row.make} {row.model}
-                  </Link>
-                  <div className="text-xs text-muted-foreground">{row.vin}</div>
-                </td>
-                <td className="px-3 py-2">{row.stock_number}</td>
-                <td className="px-3 py-2 capitalize">{row.brand}</td>
-                <td className="px-3 py-2">{row.status}</td>
-                <td className="px-3 py-2">{row.internet_price ?? "—"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <InventoryDesk
+      params={params}
+      lot={(lot ?? []) as InventoryLotRow[]}
+      vehicles={(data ?? []) as InventoryVehicle[]}
+      total={count ?? 0}
+    />
   );
 }

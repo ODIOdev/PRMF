@@ -27,6 +27,7 @@ export type Vehicle = {
   status: VehicleStatus;
   msrp: number | null;
   internet_price: number | null;
+  call_for_price?: boolean | null;
   discount: number | null;
   incentives: unknown;
   features: unknown;

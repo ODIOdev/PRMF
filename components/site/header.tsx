@@ -9,11 +9,11 @@ import { HeaderSearch } from "@/components/site/header-search";
 import { getShopModels } from "@/lib/inventory";
 import { navWithModels } from "@/lib/nav";
 import { getDictionary } from "@/lib/get-dictionary";
+import { getSiteSocials } from "@/lib/admin/settings";
 
 export async function SiteHeader() {
-  const models = await getShopModels("ford");
+  const [models, { t }, socials] = await Promise.all([getShopModels("ford"), getDictionary(), getSiteSocials()]);
   const items = navWithModels(models);
-  const { t } = await getDictionary();
 
   return (
     <header className="sticky top-0 z-40 bg-white">
@@ -42,7 +42,7 @@ export async function SiteHeader() {
             >
               {t.search}
             </Link>
-            <ScheduleDialog />
+            <ScheduleDialog socials={socials} />
           </div>
         </div>
       </div>

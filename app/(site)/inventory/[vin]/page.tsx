@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getVehicleByVin } from "@/lib/inventory";
-import { formatUsd, monthlyEstimate, titleCase } from "@/lib/format";
+import { formatUsd, listingPrice, monthlyEstimate, titleCase } from "@/lib/format";
 import { LeadForm } from "@/components/site/lead-form";
 import { getDictionary } from "@/lib/get-dictionary";
 
@@ -9,11 +9,14 @@ export default async function VehiclePage({ params }: { params: Promise<{ vin: s
   const vehicle = await getVehicleByVin(vin);
   if (!vehicle) notFound();
   const images = (vehicle.vehicle_images ?? []).sort((a, b) => a.sort_order - b.sort_order);
-  const price = vehicle.internet_price ?? vehicle.msrp;
+  const price = listingPrice(vehicle);
+  const callForPrice = price == null;
   const discount =
-    vehicle.discount ??
-    (vehicle.msrp && vehicle.internet_price ? Number(vehicle.msrp) - Number(vehicle.internet_price) : null);
-  const monthly = monthlyEstimate(price ? Number(price) : null);
+    callForPrice
+      ? null
+      : vehicle.discount ??
+        (vehicle.msrp && vehicle.internet_price ? Number(vehicle.msrp) - Number(vehicle.internet_price) : null);
+  const monthly = monthlyEstimate(price);
   const { t } = await getDictionary();
 
   return (
@@ -38,7 +41,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ vin: s
             <Spec label={t.msrp} value={formatUsd(vehicle.msrp ? Number(vehicle.msrp) : null)} />
             <Spec label={t.discount} value={discount ? formatUsd(Number(discount)) : "—"} />
             <Spec label={t.incentives} value={t.askAdvisor} />
-            <Spec label={t.estPrice} value={formatUsd(price ? Number(price) : null)} />
+            <Spec label={t.estPrice} value={callForPrice ? t.callForPrice : formatUsd(price)} />
           </div>
           {monthly ? (
             <p className="mt-3 text-sm text-muted-foreground">

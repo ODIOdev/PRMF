@@ -96,7 +96,7 @@ export async function searchVehicles(
   const supabase = await createClient();
   let query = supabase
     .from("vehicles")
-    .select("id, vin, year, make, model, trim, brand, condition, stock_number, internet_price, msrp")
+    .select("id, vin, year, make, model, trim, brand, condition, stock_number, internet_price, msrp, features")
     .in("status", ["in_stock", "in_transit"])
     .or(searchOrFilter(term))
     .order("year", { ascending: false })
@@ -109,7 +109,7 @@ export async function searchVehicles(
   if (error) throw error;
   return (data ?? []) as Pick<
     Vehicle,
-    "id" | "vin" | "year" | "make" | "model" | "trim" | "brand" | "condition" | "stock_number" | "internet_price" | "msrp"
+    "id" | "vin" | "year" | "make" | "model" | "trim" | "brand" | "condition" | "stock_number" | "internet_price" | "msrp" | "features"
   >[];
 }
 

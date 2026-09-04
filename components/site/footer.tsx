@@ -6,6 +6,7 @@ import { SocialLinks } from "@/components/site/social-links";
 import { LocaleSwitch } from "@/components/site/locale-provider";
 import { compactHourDays, formatHourTime } from "@/lib/i18n";
 import { getDictionary } from "@/lib/get-dictionary";
+import { getSiteSocials } from "@/lib/admin/settings";
 
 function mapsUrl(address: string, city: string, state: string, zip: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${address}, ${city}, ${state} ${zip}`)}`;
@@ -27,6 +28,7 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
 
 export async function SiteFooter() {
   const { locale, t } = await getDictionary();
+  const socials = await getSiteSocials();
   const year = new Date().getFullYear();
   const showroomMaps = mapsUrl(
     dealership.showroom.address,
@@ -94,7 +96,7 @@ export async function SiteFooter() {
               </li>
             ))}
           </ul>
-          <SocialLinks variant="dark" className="mt-4" />
+          <SocialLinks variant="dark" className="mt-8" links={socials} />
         </div>
 
         <div>

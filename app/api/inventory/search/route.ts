@@ -1,5 +1,5 @@
 import { searchVehicles } from "@/lib/inventory";
-import { formatUsd } from "@/lib/format";
+import { formatUsd, listingPrice } from "@/lib/format";
 import type { VehicleBrand, VehicleCondition } from "@/lib/types";
 
 export async function GET(request: Request) {
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
         brand: vehicle.brand,
         condition: vehicle.condition,
         stock: vehicle.stock_number,
-        price: formatUsd(vehicle.internet_price ?? vehicle.msrp),
+        price: formatUsd(listingPrice(vehicle)),
       })),
     });
   } catch (error) {

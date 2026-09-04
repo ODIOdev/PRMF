@@ -16,13 +16,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { dealership } from "@/lib/dealership";
 import { formatPhoneHref } from "@/lib/format";
-import type { VehicleBrand } from "@/lib/types";
+import type { LeadType, VehicleBrand } from "@/lib/types";
 import { compactHourDays, formatHourTime } from "@/lib/i18n";
 import { SocialLinks } from "@/components/site/social-links";
 import { useLocale } from "@/components/site/locale-provider";
 import { cn } from "@/lib/utils";
 
 const services = ["Oil change", "Brakes", "Tires", "Alignment", "Battery", "Inspection", "Something else"] as const;
+const visits = ["Test drive", "Sales consultation", "Trade appraisal", "Delivery", "Something else"] as const;
 
 const times = ["Morning", "Afternoon", "Evening"] as const;
 
@@ -33,7 +34,7 @@ const fieldClass = "h-10 rounded-sm bg-white";
 const hideScroll =
   "[scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden";
 
-export function ScheduleDialog() {
+export function ScheduleDialog({ socials }: { socials?: { name: string; href: string }[] }) {
   const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const [formKey, setFormKey] = useState(0);
@@ -59,30 +60,46 @@ export function ScheduleDialog() {
         overlayClassName="z-[60] bg-black/40 backdrop-blur-[2px]"
         className="z-[60] w-[calc(100%-1.5rem)] gap-0 overflow-hidden rounded-xl p-0 sm:max-w-2xl"
       >
-        <ScheduleForm key={formKey} onClose={() => setOpen(false)} />
+        <ScheduleForm key={formKey} onClose={() => setOpen(false)} socials={socials} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function ScheduleForm({ onClose }: { onClose: () => void }) {
+function ScheduleForm({
+  onClose,
+  socials,
+}: {
+  onClose: () => void;
+  socials?: { name: string; href: string }[];
+}) {
   const { locale, t } = useLocale();
+  const [department, setDepartment] = useState<Extract<LeadType, "sales" | "service">>("service");
   const [brand, setBrand] = useState<Extract<VehicleBrand, "ford" | "lincoln">>("ford");
   const [service, setService] = useState<(typeof services)[number] | "">("");
+  const [visit, setVisit] = useState<(typeof visits)[number] | "">("");
   const [state, action, pending] = useActionState(submitServiceSchedule, initial);
   const minDate = useMemo(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   }, []);
-  const phone = brand === "lincoln" ? dealership.phones.lincolnService : dealership.phones.fordService;
+  const sales = department === "sales";
+  const place = sales ? dealership.showroom : dealership.serviceCenter;
+  const phone = sales
+    ? dealership.phones.sales
+    : brand === "lincoln"
+      ? dealership.phones.lincolnService
+      : dealership.phones.fordService;
   const maps = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    `${dealership.serviceCenter.address}, ${dealership.serviceCenter.city}, ${dealership.serviceCenter.state} ${dealership.serviceCenter.zip}`,
+    `${place.address}, ${place.city}, ${place.state} ${place.zip}`,
   )}`;
 
   return (
     <div className="flex max-h-[min(90vh,40rem)] flex-col">
       <header className="relative shrink-0 border-b border-chrome px-6 py-4 pr-12">
-        <DialogTitle className="text-lg font-semibold tracking-tight">{t.scheduleTitle}</DialogTitle>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          {sales ? t.scheduleSalesTitle : t.scheduleTitle}
+        </DialogTitle>
         <DialogDescription className="mt-1 text-sm text-muted-foreground">
           {t.scheduleSub}
         </DialogDescription>
@@ -98,11 +115,11 @@ function ScheduleForm({ onClose }: { onClose: () => void }) {
 
       <div className="grid min-h-0 flex-1 md:grid-cols-[15.25rem_minmax(0,1fr)]">
         <aside className="flex flex-col border-b border-chrome px-6 py-5 md:border-r md:border-b-0">
-          <p className="text-xs font-medium text-muted-foreground">{t.serviceCenter}</p>
+          <p className="text-xs font-medium text-muted-foreground">{sales ? t.showroom : t.serviceCenter}</p>
           <a href={maps} target="_blank" rel="noreferrer" className="mt-2 text-sm font-medium leading-5 hover:text-ford">
-            {dealership.serviceCenter.address}
+            {place.address}
             <span className="mt-0.5 block font-normal text-muted-foreground">
-              {dealership.serviceCenter.city}, {dealership.serviceCenter.state} {dealership.serviceCenter.zip}
+              {place.city}, {place.state} {place.zip}
             </span>
           </a>
 
@@ -116,9 +133,9 @@ function ScheduleForm({ onClose }: { onClose: () => void }) {
           </ul>
 
           <a href={formatPhoneHref(phone)} className="mt-5 text-sm font-medium text-ford hover:underline">
-            {brand === "lincoln" ? "Lincoln" : "Ford"} {phone}
+            {sales ? t.sales : brand === "lincoln" ? "Lincoln" : "Ford"} {phone}
           </a>
-          <SocialLinks className="mt-5" />
+          <SocialLinks className="mt-5" links={socials} />
         </aside>
 
         <div className={cn("min-h-0 overflow-y-auto overscroll-contain", hideScroll)}>
@@ -136,47 +153,77 @@ function ScheduleForm({ onClose }: { onClose: () => void }) {
           ) : (
             <form action={action} className="space-y-4 p-6">
               <input type="hidden" name="brand" value={brand} />
+              <input type="hidden" name="department" value={department} />
 
-              <div className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-chrome bg-chrome">
-                {(["ford", "lincoln"] as const).map((value) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setBrand(value)}
+              <Toggle
+                value={department}
+                onChange={setDepartment}
+                options={[
+                  { value: "sales", label: t.sales },
+                  { value: "service", label: t.service },
+                ]}
+              />
+
+              <Toggle
+                value={brand}
+                onChange={setBrand}
+                options={[
+                  { value: "ford", label: "Ford" },
+                  { value: "lincoln", label: "Lincoln" },
+                ]}
+              />
+
+              {sales ? (
+                <div className="space-y-1.5">
+                  <Label htmlFor="schedule-visit">{t.salesVisit}</Label>
+                  <select
+                    id="schedule-visit"
+                    name="salesVisit"
+                    required
+                    value={visit}
+                    onChange={(event) => setVisit(event.target.value as (typeof visits)[number] | "")}
                     className={cn(
-                      "h-9 bg-white text-sm font-medium capitalize transition",
-                      brand === value ? "bg-ford text-white" : "text-foreground hover:bg-[#f4f6f8]",
+                      fieldClass,
+                      "w-full border border-input px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                      !visit && "text-muted-foreground",
                     )}
                   >
-                    {value}
-                  </button>
-                ))}
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="schedule-service">{t.service}</Label>
-                <select
-                  id="schedule-service"
-                  name="service"
-                  required
-                  value={service}
-                  onChange={(event) => setService(event.target.value as (typeof services)[number] | "")}
-                  className={cn(
-                    fieldClass,
-                    "w-full border border-input px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-                    !service && "text-muted-foreground",
-                  )}
-                >
-                  <option value="" disabled>
-                    {t.selectService}
-                  </option>
-                  {services.map((item) => (
-                    <option key={item} value={item}>
-                      {t.services[item]}
+                    <option value="" disabled>
+                      {t.selectVisit}
                     </option>
-                  ))}
-                </select>
-              </div>
+                    {visits.map((item) => (
+                      <option key={item} value={item}>
+                        {t.visits[item]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <Label htmlFor="schedule-service">{t.service}</Label>
+                  <select
+                    id="schedule-service"
+                    name="service"
+                    required
+                    value={service}
+                    onChange={(event) => setService(event.target.value as (typeof services)[number] | "")}
+                    className={cn(
+                      fieldClass,
+                      "w-full border border-input px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                      !service && "text-muted-foreground",
+                    )}
+                  >
+                    <option value="" disabled>
+                      {t.selectService}
+                    </option>
+                    {services.map((item) => (
+                      <option key={item} value={item}>
+                        {t.services[item]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
@@ -205,7 +252,12 @@ function ScheduleForm({ onClose }: { onClose: () => void }) {
 
               <div className="space-y-1.5">
                 <Label htmlFor="schedule-vehicle">{t.vehicle}</Label>
-                <Input id="schedule-vehicle" name="vehicle" placeholder={t.vehiclePlaceholder} className={fieldClass} />
+                <Input
+                  id="schedule-vehicle"
+                  name="vehicle"
+                  placeholder={sales ? t.vehicleInterestPlaceholder : t.vehiclePlaceholder}
+                  className={fieldClass}
+                />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">
@@ -228,7 +280,9 @@ function ScheduleForm({ onClose }: { onClose: () => void }) {
 
               {state.error ? (
                 <p className="text-sm text-destructive">
-                  {state.error === "no_service"
+                  {state.error === "no_visit"
+                    ? t.chooseVisit
+                    : state.error === "no_service"
                     ? t.chooseService
                     : state.error === "incomplete"
                       ? t.leadIncomplete
@@ -243,6 +297,34 @@ function ScheduleForm({ onClose }: { onClose: () => void }) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+function Toggle<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T;
+  onChange: (value: T) => void;
+  options: { value: T; label: string }[];
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-sm border border-chrome bg-chrome">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => onChange(option.value)}
+          className={cn(
+            "h-9 bg-white text-sm font-medium transition",
+            value === option.value ? "bg-ford text-white" : "text-foreground hover:bg-[#f4f6f8]",
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
     </div>
   );
 }

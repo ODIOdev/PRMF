@@ -2,18 +2,21 @@
 
 import Link from "next/link";
 import type { Vehicle } from "@/lib/types";
-import { formatUsd, monthlyEstimate } from "@/lib/format";
+import { formatUsd, listingPrice, monthlyEstimate } from "@/lib/format";
 import { useLocale } from "@/components/site/locale-provider";
 
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const { t } = useLocale();
   const image = vehicle.vehicle_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
-  const price = vehicle.internet_price ?? vehicle.msrp;
+  const price = listingPrice(vehicle);
+  const callForPrice = price == null;
   const discount =
-    vehicle.discount ??
-    (vehicle.msrp && vehicle.internet_price ? Number(vehicle.msrp) - Number(vehicle.internet_price) : null);
+    callForPrice
+      ? null
+      : vehicle.discount ??
+        (vehicle.msrp && vehicle.internet_price ? Number(vehicle.msrp) - Number(vehicle.internet_price) : null);
   const href = `/inventory/${vehicle.vin ?? vehicle.id}`;
-  const monthly = monthlyEstimate(price ? Number(price) : null);
+  const monthly = monthlyEstimate(price);
 
   return (
     <Link href={href} className="group border border-chrome bg-white transition hover:border-ford">
@@ -52,7 +55,7 @@ export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
           <PriceCell label={t.msrp} value={formatUsd(vehicle.msrp ? Number(vehicle.msrp) : null)} />
           <PriceCell label={t.discount} value={discount ? formatUsd(Number(discount)) : "—"} />
           <PriceCell label={t.incentives} value={t.seeDetails} />
-          <PriceCell label={t.estPrice} value={formatUsd(price ? Number(price) : null)} emphasize />
+          <PriceCell label={t.estPrice} value={callForPrice ? t.callForPrice : formatUsd(price)} emphasize />
         </div>
         {monthly ? (
           <p className="text-xs text-muted-foreground">{t.monthlyEst(formatUsd(monthly))}</p>

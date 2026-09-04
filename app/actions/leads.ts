@@ -39,8 +39,12 @@ export async function submitPublicLead(_prev: LeadState, formData: FormData): Pr
 }
 
 export async function submitServiceSchedule(_prev: LeadState, formData: FormData): Promise<LeadState> {
-  const service = String(formData.get("service") ?? "").trim();
-  if (!service) return { ok: false, error: "no_service" };
+  const department = String(formData.get("department") ?? "service") === "sales" ? "sales" : "service";
+  const reason =
+    department === "sales"
+      ? String(formData.get("salesVisit") ?? "").trim()
+      : String(formData.get("service") ?? "").trim();
+  if (!reason) return { ok: false, error: department === "sales" ? "no_visit" : "no_service" };
 
   const preferredDate = String(formData.get("preferredDate") ?? "").trim();
   const preferredTime = String(formData.get("preferredTime") ?? "").trim();
@@ -48,10 +52,15 @@ export async function submitServiceSchedule(_prev: LeadState, formData: FormData
   const notes = String(formData.get("notes") ?? "").trim();
   const when = [preferredDate, preferredTime].filter(Boolean).join(", ");
 
-  formData.set("type", "service");
+  formData.set("type", department);
   formData.set(
     "message",
-    [`Service: ${service}`, when && `Preferred: ${when}`, vehicle && `Vehicle: ${vehicle}`, notes]
+    [
+      department === "sales" ? `Visit: ${reason}` : `Service: ${reason}`,
+      when && `Preferred: ${when}`,
+      vehicle && `Vehicle: ${vehicle}`,
+      notes,
+    ]
       .filter(Boolean)
       .join("\n"),
   );

@@ -4,6 +4,7 @@ import { LeadForm } from "@/components/site/lead-form";
 import { SocialLinks } from "@/components/site/social-links";
 import { formatPhoneHref } from "@/lib/format";
 import { getDictionary } from "@/lib/get-dictionary";
+import { getSiteSocials } from "@/lib/admin/settings";
 import { compactHourDays } from "@/lib/i18n";
 
 function mapsUrl(address: string, city: string, state: string, zip: string) {
@@ -11,7 +12,7 @@ function mapsUrl(address: string, city: string, state: string, zip: string) {
 }
 
 export default async function ContactPage() {
-  const { locale, t } = await getDictionary();
+  const [{ locale, t }, socials] = await Promise.all([getDictionary(), getSiteSocials()]);
   const showroomMaps = mapsUrl(
     dealership.showroom.address,
     dealership.showroom.city,
@@ -125,7 +126,7 @@ export default async function ContactPage() {
                 {dealership.email}
               </a>
             </div>
-            <SocialLinks className="md:self-end" />
+            <SocialLinks className="md:self-end" links={socials} />
           </div>
           <LeadForm type="sales" layout="landscape" className="p-5" />
         </div>

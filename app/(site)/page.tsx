@@ -10,16 +10,18 @@ import { InventorySearch } from "@/components/site/inventory-search";
 import { ShopByModel } from "@/components/site/shop-by-model";
 import { SocialLinks } from "@/components/site/social-links";
 import { getDictionary } from "@/lib/get-dictionary";
+import { getSiteSocials } from "@/lib/admin/settings";
 import { compactHourDays } from "@/lib/i18n";
 
 const HERO_BLUR =
   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDABQODxIPDRQSEBIXFRQYHjIhHhwcHj0sLiQySUBMS0dARkVQWnNiUFVtVkVGZIhlbXd7gYKBTmCNl4x9lnN+gXz/2wBDARUXFx4aHjshITt8U0ZTfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8fHz/wAARCAAOABgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDYeGziyHliXAycsKydZvI49i2MkD7+CxOdv6VBcXcZY4hX8hVOR4nJJi5PWs4X6mkkiP8As+Sdma4uMn/ZGR789qKRnUZAMmD1G80VoZn/2Q==";
 
 export default async function HomePage() {
-  const [featured, counts, { locale, t }] = await Promise.all([
+  const [featured, counts, { locale, t }, socials] = await Promise.all([
     getFeaturedVehicles(6),
     getInventoryCounts(),
     getDictionary(),
+    getSiteSocials(),
   ]);
 
   return (
@@ -177,24 +179,12 @@ export default async function HomePage() {
 
       <section className="border-t border-chrome bg-[#f4f6f8] py-16">
         <div className="mx-auto max-w-6xl px-4">
-          <div className="relative max-w-xl pl-5">
-            <span
-              aria-hidden
-              className="absolute inset-y-0.5 left-0 w-[3px] rounded-full bg-linear-to-b from-ford to-lincoln-gold"
-            />
-            <p className="inline-flex items-center rounded-full border border-chrome bg-white px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-ford">
-              {t.visitUs}
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold leading-[1.15] tracking-tight">
-              {t.oneDealer}
-              <span className="mt-1.5 block text-xl font-medium tracking-tight text-neutral-500 md:text-[1.35rem]">
-                {t.twoBrands}
-              </span>
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground">{t.tagline}</p>
+          <div className="mb-6">
+            <h2 className="text-2xl font-semibold tracking-tight">{t.visitUs}</h2>
+            <p className="mt-1 text-sm text-muted-foreground">{t.visitIntro}</p>
           </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <a
               href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                 `${dealership.showroom.address}, ${dealership.showroom.city}, ${dealership.showroom.state} ${dealership.showroom.zip}`,
@@ -277,7 +267,7 @@ export default async function HomePage() {
                   {t.lincolnService} {dealership.phones.lincolnService}
                 </p>
               </div>
-              <SocialLinks className="md:self-end" />
+              <SocialLinks className="md:self-end" links={socials} />
             </div>
             <LeadForm type="sales" layout="landscape" className="p-5" />
           </div>
