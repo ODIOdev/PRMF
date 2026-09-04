@@ -7,6 +7,7 @@ function revalidateDesk() {
   revalidatePath("/admin");
   revalidatePath("/admin/leads");
   revalidatePath("/admin/inbox");
+  revalidatePath("/admin/customers");
   revalidatePath("/admin/tasks");
   revalidatePath("/admin/appointments");
   revalidatePath("/admin/analytics");
@@ -58,6 +59,25 @@ export async function completeTask(formData: FormData) {
     .from("tasks")
     .update({ completed_at: new Date().toISOString() })
     .eq("id", String(formData.get("id")));
+  revalidateDesk();
+}
+
+export async function createCustomer(formData: FormData) {
+  await requireStaff();
+  const firstName = String(formData.get("first_name") ?? "").trim();
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const phone = String(formData.get("phone") ?? "").trim();
+  if (!firstName && !lastName && !email && !phone) return;
+  const supabase = await createDeskClient();
+  await supabase.from("customers").insert({
+    first_name: firstName || null,
+    last_name: lastName || null,
+    email: email || null,
+    phone: phone || null,
+    email_consent: formData.get("email_consent") === "on",
+    sms_consent: formData.get("sms_consent") === "on",
+  });
   revalidateDesk();
 }
 

@@ -26,38 +26,40 @@ export function InventorySearch({
   const [query, setQuery] = useState(q);
   const [brandValue, setBrandValue] = useState(brand);
   const [conditionValue, setConditionValue] = useState(condition);
-  const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [active, setActive] = useState(0);
-  const interactive = useRef(false);
-  const { hits, ready } = useInventoryHits(query, brandValue, conditionValue);
-
-  useEffect(() => {
+  const [interactive, setInteractive] = useState(false);
+  const [prevQ, setPrevQ] = useState(q);
+  const [prevBrand, setPrevBrand] = useState(brand);
+  const [prevCondition, setPrevCondition] = useState(condition);
+  if (q !== prevQ || brand !== prevBrand || condition !== prevCondition) {
+    setPrevQ(q);
+    setPrevBrand(brand);
+    setPrevCondition(condition);
     setQuery(q);
     setBrandValue(brand);
     setConditionValue(condition);
-  }, [q, brand, condition]);
-
-  useEffect(() => {
-    if (ready && query.trim() && interactive.current) {
-      setActive(0);
-      setOpen(true);
-    }
-  }, [ready, hits, query]);
+  }
+  const { hits, ready } = useInventoryHits(query, brandValue, conditionValue);
+  const [prevQuery, setPrevQuery] = useState(query);
+  if (query !== prevQuery) {
+    setPrevQuery(query);
+    setActive(0);
+  }
+  const showList = !dismissed && interactive && ready && Boolean(query.trim());
 
   useEffect(() => {
     function onPointer(event: MouseEvent) {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
+      if (!root.current?.contains(event.target as Node)) setDismissed(true);
     }
     window.addEventListener("mousedown", onPointer);
     return () => window.removeEventListener("mousedown", onPointer);
   }, []);
 
   function go(href: string) {
-    setOpen(false);
+    setDismissed(true);
     router.push(href);
   }
-
-  const showList = open && ready && Boolean(query.trim());
 
   return (
     <form
@@ -96,15 +98,16 @@ export function InventorySearch({
           autoComplete="off"
           value={query}
           onChange={(event) => {
-            interactive.current = true;
+            setInteractive(true);
+            setDismissed(false);
             setQuery(event.target.value);
           }}
           onFocus={() => {
-            interactive.current = true;
-            if (ready && query.trim()) setOpen(true);
+            setInteractive(true);
+            if (ready && query.trim()) setDismissed(false);
           }}
           onKeyDown={(event) => {
-            if (event.key === "Escape") setOpen(false);
+            if (event.key === "Escape") setDismissed(true);
             if (event.key === "Enter" && showList && hits[active]) {
               event.preventDefault();
               go(hits[active].href);
@@ -139,7 +142,7 @@ export function InventorySearch({
           active={active}
           emptyLabel={t.searchNoResults}
           onActive={setActive}
-          onNavigate={() => setOpen(false)}
+          onNavigate={() => setDismissed(true)}
           className="absolute top-full right-3 left-3 z-30 mt-1 max-h-72 overflow-y-auto md:right-4 md:left-4"
         />
       ) : null}

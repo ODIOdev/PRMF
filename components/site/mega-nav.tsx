@@ -15,13 +15,14 @@ export function MegaNav({ items }: { items: NavItem[] }) {
   const navItems = translateNav(items, locale);
   const [openId, setOpenId] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const desktopRef = useRef<HTMLDivElement>(null);
-  const openItem = navItems.find((item) => item.id === openId && item.columns?.length);
-
-  useEffect(() => {
+  const [seenPath, setSeenPath] = useState(pathname);
+  if (pathname !== seenPath) {
+    setSeenPath(pathname);
     setOpenId(null);
     setMobileOpen(false);
-  }, [pathname]);
+  }
+  const desktopRef = useRef<HTMLDivElement>(null);
+  const openItem = navItems.find((item) => item.id === openId && item.columns?.length);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {

@@ -3,7 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import { Bot, Car, Clock, MessageCircle, MessageSquare, Send, Wrench, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/components/site/locale-provider";
@@ -16,17 +16,67 @@ function messageText(parts: { type: string; text?: string }[]) {
     .join("");
 }
 
+type DeskLine = { id: string; body: string; at: string };
+
 export function SupportChat() {
   const { locale, t } = useLocale();
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [onDark, setOnDark] = useState(false);
+  const [handoff, setHandoff] = useState({ firstName: "", lastName: "", email: "", phone: "" });
+  const [handedOff, setHandedOff] = useState(false);
+  const [deskLines, setDeskLines] = useState<DeskLine[]>([]);
   const scroller = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const launcherRef = useRef<HTMLButtonElement>(null);
+  const visitorRef = useRef("");
+  const threadRef = useRef<string | undefined>(undefined);
+  const localeRef = useRef(locale);
+
+  useEffect(() => {
+    localeRef.current = locale;
+  }, [locale]);
+
+  function ensureVisitor() {
+    if (visitorRef.current) return visitorRef.current;
+    let key = localStorage.getItem("prmf_assist_id");
+    if (!key) {
+      key = crypto.randomUUID();
+      localStorage.setItem("prmf_assist_id", key);
+    }
+    visitorRef.current = key;
+    if (!threadRef.current) threadRef.current = sessionStorage.getItem("prmf_assist_thread") || undefined;
+    return key;
+  }
+
+  /* Custom transport reads refs only inside fetch (on send), not during render. */
+  /* eslint-disable react-hooks/refs */
   const { messages, sendMessage, setMessages, status, error, stop } = useChat({
-    transport: new DefaultChatTransport({ api: "/api/chat", body: { locale } }),
+    transport: new DefaultChatTransport({
+      api: "/api/chat",
+      fetch: async (inputUrl, init) => {
+        const visitorKey = ensureVisitor();
+        const raw = typeof init?.body === "string" ? init.body : "{}";
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        const res = await fetch(inputUrl, {
+          ...init,
+          body: JSON.stringify({
+            ...parsed,
+            locale: localeRef.current,
+            visitorKey,
+            threadId: threadRef.current,
+          }),
+        });
+        const id = res.headers.get("x-thread-id");
+        if (id) {
+          threadRef.current = id;
+          sessionStorage.setItem("prmf_assist_thread", id);
+        }
+        return res;
+      },
+    }),
   });
+  /* eslint-enable react-hooks/refs */
 
   const busy = status === "submitted" || status === "streaming";
   const smsHref = `sms:+1${dealership.phones.sales.replace(/\D/g, "")}?body=${encodeURIComponent(t.chat.textUsBody)}`;
@@ -34,11 +84,24 @@ export function SupportChat() {
     { label: t.chat.hours, prompt: t.chat.hoursPrompt, icon: Clock },
     { label: t.chat.f150, prompt: t.chat.f150Prompt, icon: Car },
     { label: t.chat.schedule, prompt: t.chat.schedulePrompt, icon: Wrench },
+    { label: t.chat.desk, prompt: t.chat.deskPrompt, icon: MessageSquare },
   ];
+  const userTurns = messages.filter((row) => row.role === "user").length;
+  const showHandoff = open && !handedOff && userTurns > 0;
+
+  useEffect(() => {
+    let key = localStorage.getItem("prmf_assist_id");
+    if (!key) {
+      key = crypto.randomUUID();
+      localStorage.setItem("prmf_assist_id", key);
+    }
+    visitorRef.current = key;
+    threadRef.current = sessionStorage.getItem("prmf_assist_thread") || undefined;
+  }, []);
 
   useEffect(() => {
     scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
-  }, [messages, status]);
+  }, [messages, status, deskLines]);
 
   useEffect(() => {
     if (open) inputRef.current?.focus();
@@ -66,10 +129,39 @@ export function SupportChat() {
     };
   }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
+    let cancelled = false;
+    async function pull() {
+      const visitor = ensureVisitor();
+      const id = threadRef.current;
+      if (!id || !visitor) return;
+      const res = await fetch(`/api/chat/thread?id=${encodeURIComponent(id)}&visitor=${encodeURIComponent(visitor)}`);
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as {
+        contact?: { leadId?: string | null } | null;
+        messages?: { id: string; role: string; body: string; at: string }[];
+      };
+      if (data.contact?.leadId) setHandedOff(true);
+      const staff = (data.messages ?? []).filter((row) => row.role === "staff");
+      setDeskLines(staff.map((row) => ({ id: row.id, body: row.body, at: row.at })));
+    }
+    void pull();
+    const timer = window.setInterval(() => void pull(), 6000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [open, messages.length]);
+
   function endChat() {
     if (busy) stop();
     setMessages([]);
     setInput("");
+    setDeskLines([]);
+    setHandedOff(false);
+    threadRef.current = undefined;
+    sessionStorage.removeItem("prmf_assist_thread");
     scroller.current?.scrollTo({ top: 0 });
   }
 
@@ -78,6 +170,26 @@ export function SupportChat() {
     if (!value || busy) return;
     sendMessage({ text: value });
     setInput("");
+  }
+
+  async function sendHandoff(event: FormEvent) {
+    event.preventDefault();
+    ensureVisitor();
+    const threadId = threadRef.current;
+    if (!threadId || !handoff.firstName.trim() || !handoff.phone.trim() || !handoff.email.trim()) return;
+    const res = await fetch("/api/chat/handoff", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        threadId,
+        visitorKey: visitorRef.current,
+        firstName: handoff.firstName.trim(),
+        lastName: handoff.lastName.trim(),
+        email: handoff.email.trim(),
+        phone: handoff.phone.trim(),
+      }),
+    });
+    if (res.ok) setHandedOff(true);
   }
 
   return (
@@ -141,14 +253,6 @@ export function SupportChat() {
                     <span className="text-[11px] font-medium leading-4">{item.label}</span>
                   </button>
                 ))}
-                <a
-                  href={smsHref}
-                  aria-label={`${t.chat.textUs} ${dealership.phones.sales}`}
-                  className="flex flex-col items-start gap-1.5 rounded-xl border border-chrome/80 bg-white px-2.5 py-2 text-left transition hover:border-ford hover:text-ford"
-                >
-                  <MessageSquare className="size-3.5 text-ford" />
-                  <span className="text-[11px] font-medium leading-4">{t.chat.textUs}</span>
-                </a>
               </div>
             ) : null}
 
@@ -177,6 +281,18 @@ export function SupportChat() {
               );
             })}
 
+            {deskLines.map((line) => (
+              <div key={line.id} className="flex gap-2">
+                <span className="mt-1 flex size-7 shrink-0 items-center justify-center bg-lincoln-gold text-[10px] font-bold text-lincoln">
+                  {t.chat.deskReply.slice(0, 1)}
+                </span>
+                <div className="max-w-[85%] whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-lincoln-gold px-3.5 py-2.5 text-[13px] leading-5 text-lincoln">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide opacity-70">{t.chat.deskReply}</p>
+                  {line.body}
+                </div>
+              </div>
+            ))}
+
             {status === "submitted" ? (
               <div className="flex gap-2">
                 <span className="mt-1 flex size-7 shrink-0 items-center justify-center rounded-full bg-ford text-white">
@@ -194,6 +310,51 @@ export function SupportChat() {
               <p className="rounded-xl border border-destructive/20 bg-destructive/5 px-3 py-2 text-[12px] text-destructive">
                 {t.chat.error}
               </p>
+            ) : null}
+
+            {showHandoff ? (
+              <form onSubmit={sendHandoff} className="ml-9 space-y-2 rounded-xl border border-chrome bg-white p-3">
+                <p className="text-[12px] font-semibold tracking-tight">{t.chat.handoffTitle}</p>
+                <p className="text-[11px] leading-4 text-muted-foreground">{t.chat.handoffHint}</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  <input
+                    required
+                    value={handoff.firstName}
+                    onChange={(event) => setHandoff((row) => ({ ...row, firstName: event.target.value }))}
+                    placeholder={t.firstName}
+                    className="h-8 border border-input px-2 text-[12px]"
+                  />
+                  <input
+                    value={handoff.lastName}
+                    onChange={(event) => setHandoff((row) => ({ ...row, lastName: event.target.value }))}
+                    placeholder={t.lastName}
+                    className="h-8 border border-input px-2 text-[12px]"
+                  />
+                  <input
+                    required
+                    type="email"
+                    value={handoff.email}
+                    onChange={(event) => setHandoff((row) => ({ ...row, email: event.target.value }))}
+                    placeholder={t.email}
+                    className="h-8 border border-input px-2 text-[12px]"
+                  />
+                  <input
+                    required
+                    type="tel"
+                    value={handoff.phone}
+                    onChange={(event) => setHandoff((row) => ({ ...row, phone: event.target.value }))}
+                    placeholder={t.phone}
+                    className="h-8 border border-input px-2 text-[12px]"
+                  />
+                </div>
+                <button type="submit" className="h-8 w-full bg-ford text-[12px] font-medium text-white hover:bg-ford-bright">
+                  {t.chat.sendToDesk}
+                </button>
+              </form>
+            ) : null}
+
+            {handedOff ? (
+              <p className="ml-9 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-[12px] text-emerald-900">{t.chat.sentToDesk}</p>
             ) : null}
 
             {messages.length > 0 ? (

@@ -20,13 +20,19 @@ export async function submitPublicLead(_prev: LeadState, formData: FormData): Pr
     return { ok: false, error: "incomplete" };
   }
 
+  const channel = String(formData.get("channel") ?? "").trim().toLowerCase();
+  const tagged =
+    ["contact", "sales", "service", "finance", "trade", "schedule", "chat"].includes(channel) && !message.startsWith("[")
+      ? `[${channel}]${message ? `\n${message}` : ""}`
+      : message;
+
   const supabase = createAdminClient();
   const { error } = await supabase.rpc("submit_lead", {
     p_first_name: firstName,
     p_last_name: lastName,
     p_email: email,
     p_phone: phone,
-    p_message: message,
+    p_message: tagged,
     p_type: type,
     p_brand: brand,
     p_vehicle_id: vehicleId,
@@ -53,6 +59,7 @@ export async function submitServiceSchedule(_prev: LeadState, formData: FormData
   const when = [preferredDate, preferredTime].filter(Boolean).join(", ");
 
   formData.set("type", department);
+  formData.set("channel", "schedule");
   formData.set(
     "message",
     [

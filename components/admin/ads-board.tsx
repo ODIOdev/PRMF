@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ExternalLink, Pencil, Plus, Trash2 } from "lucide-react";
@@ -56,10 +56,11 @@ export function AdsCampaignBoard({ board: initial, soldCount }: { board: AdCampa
   const [pending, startTransition] = useTransition();
   const [board, setBoard] = useState(initial);
   const saved = snapshot(initial);
-
-  useEffect(() => {
+  const [savedSnapshot, setSavedSnapshot] = useState(saved);
+  if (saved !== savedSnapshot) {
+    setSavedSnapshot(saved);
     setBoard(JSON.parse(saved) as AdCampaignBoard);
-  }, [saved]);
+  }
 
   const performance = useMemo(() => summarizeAdPerformance(board, soldCount), [board, soldCount]);
   const chartMax = Math.max(...board.campaigns.flatMap((row) => [row.spend, row.revenue]), 1);

@@ -150,45 +150,55 @@ export function InventoryDesk({
           </Link>
         </div>
 
-        <div className="space-y-2.5 border-b border-chrome px-3 py-3">
-          <FilterRail label="Brand">
-            <FilterChip href={inventoryHref(params, { brand: undefined })} active={!params.brand}>
+        <div className="flex items-center gap-2 overflow-x-auto border-b border-chrome bg-[#f4f6f8] px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <SegmentGroup label="Brand">
+            <Segment href={inventoryHref(params, { brand: undefined })} active={!params.brand}>
               All
-            </FilterChip>
-            <FilterChip href={inventoryHref(params, { brand: "ford" })} active={params.brand === "ford"}>
+            </Segment>
+            <Segment href={inventoryHref(params, { brand: "ford" })} active={params.brand === "ford"} tone="ford">
               Ford
-            </FilterChip>
-            <FilterChip href={inventoryHref(params, { brand: "lincoln" })} active={params.brand === "lincoln"}>
+            </Segment>
+            <Segment href={inventoryHref(params, { brand: "lincoln" })} active={params.brand === "lincoln"} tone="lincoln">
               Lincoln
-            </FilterChip>
-          </FilterRail>
-          <FilterRail label="Condition">
-            <FilterChip href={inventoryHref(params, { condition: undefined })} active={!params.condition}>
+            </Segment>
+          </SegmentGroup>
+          <SegmentGroup label="Condition">
+            <Segment href={inventoryHref(params, { condition: undefined })} active={!params.condition}>
               Any
-            </FilterChip>
-            <FilterChip href={inventoryHref(params, { condition: "new" })} active={params.condition === "new"}>
+            </Segment>
+            <Segment href={inventoryHref(params, { condition: "new" })} active={params.condition === "new"}>
               New
-            </FilterChip>
-            <FilterChip href={inventoryHref(params, { condition: "used" })} active={params.condition === "used"}>
+            </Segment>
+            <Segment href={inventoryHref(params, { condition: "used" })} active={params.condition === "used"}>
               Used
-            </FilterChip>
-            <FilterChip href={inventoryHref(params, { condition: "cpo" })} active={params.condition === "cpo"}>
+            </Segment>
+            <Segment href={inventoryHref(params, { condition: "cpo" })} active={params.condition === "cpo"}>
               CPO
-            </FilterChip>
-          </FilterRail>
-          <FilterRail label="Status">
-            <FilterChip href={inventoryHref(params, { status: "live", aged: undefined })} active={liveOn}>
+            </Segment>
+          </SegmentGroup>
+          <SegmentGroup label="Status">
+            <Segment href={inventoryHref(params, { status: "live", aged: undefined })} active={liveOn}>
               Live
-            </FilterChip>
-            {INVENTORY_STATUSES.map((value) => (
-              <FilterChip key={value} href={inventoryHref(params, { status: value, aged: undefined })} active={!agedOn && status === value}>
-                {titleCase(value)}
-              </FilterChip>
-            ))}
-            <FilterChip href={inventoryHref(params, { status: "all", aged: undefined })} active={!agedOn && status === "all"}>
+            </Segment>
+            <Segment href={inventoryHref(params, { status: "in_stock", aged: undefined })} active={!agedOn && status === "in_stock"}>
+              Stock
+            </Segment>
+            <Segment href={inventoryHref(params, { status: "in_transit", aged: undefined })} active={!agedOn && status === "in_transit"}>
+              Transit
+            </Segment>
+            <Segment href={inventoryHref(params, { aged: agedOn ? undefined : "1", status: undefined })} active={agedOn} tone="alert">
+              Aged
+            </Segment>
+            <Segment href={inventoryHref(params, { status: "sold", aged: undefined })} active={!agedOn && status === "sold"}>
+              Sold
+            </Segment>
+            <Segment href={inventoryHref(params, { status: "hidden", aged: undefined })} active={!agedOn && status === "hidden"}>
+              Hidden
+            </Segment>
+            <Segment href={inventoryHref(params, { status: "all", aged: undefined })} active={!agedOn && status === "all"}>
               All
-            </FilterChip>
-          </FilterRail>
+            </Segment>
+          </SegmentGroup>
         </div>
 
         <div className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2.5">
@@ -318,22 +328,42 @@ function VehicleRow({ row }: { row: InventoryVehicle }) {
   );
 }
 
-function FilterRail({ label, children }: { label: string; children: React.ReactNode }) {
+function SegmentGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-wrap items-center gap-1.5">
-      <span className="w-16 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+    <div
+      role="group"
+      aria-label={label}
+      className="inline-flex h-9 shrink-0 divide-x divide-chrome overflow-hidden border border-chrome bg-white"
+    >
       {children}
     </div>
   );
 }
 
-function FilterChip({ href, active, children }: { href: string; active: boolean; children: React.ReactNode }) {
+function Segment({
+  href,
+  active,
+  children,
+  tone,
+}: {
+  href: string;
+  active: boolean;
+  children: React.ReactNode;
+  tone?: "ford" | "lincoln" | "alert";
+}) {
   return (
     <Link
       href={href}
+      aria-current={active ? "page" : undefined}
       className={cn(
-        "inline-flex h-7 items-center border px-2.5 text-[12px] font-medium",
-        active ? "border-ford bg-ford text-white" : "border-chrome bg-white text-foreground hover:border-ford hover:text-ford",
+        "inline-flex h-full items-center justify-center gap-1.5 px-2.5 text-[11px] font-semibold tracking-wide whitespace-nowrap",
+        active
+          ? tone === "lincoln"
+            ? "bg-lincoln-gold text-lincoln"
+            : tone === "alert"
+              ? "bg-red-700 text-white"
+              : "bg-ford text-white"
+          : "text-muted-foreground hover:bg-[#eef4fb] hover:text-ford",
       )}
     >
       {children}

@@ -19,6 +19,8 @@ export default async function AdminInventoryPage({
   const page = Math.max(1, Number(params.page) || 1);
   const from = (page - 1) * INVENTORY_PAGE_SIZE;
   const to = from + INVENTORY_PAGE_SIZE - 1;
+  // Request-time cutoff for the aged-lot filter (not render-cached).
+  // eslint-disable-next-line react-hooks/purity -- server request clock
   const agedCutoff = new Date(Date.now() - 60 * 86_400_000).toISOString();
 
   let query = supabase

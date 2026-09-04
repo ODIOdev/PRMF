@@ -71,21 +71,24 @@ export function InventoryDeskSearch({
   const router = useRouter();
   const root = useRef<HTMLFormElement>(null);
   const listId = useId();
-  const [query, setQuery] = useState(params.q ?? "");
+  const urlQ = params.q ?? "";
+  const [query, setQuery] = useState(urlQ);
+  const [prevUrlQ, setPrevUrlQ] = useState(urlQ);
+  if (urlQ !== prevUrlQ) {
+    setPrevUrlQ(urlQ);
+    setQuery(urlQ);
+  }
   const deferredQuery = useDeferredValue(query);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+  const [prevDeferred, setPrevDeferred] = useState(deferredQuery);
+  if (deferredQuery !== prevDeferred) {
+    setPrevDeferred(deferredQuery);
+    setActive(0);
+  }
   const matches = useMemo(() => searchLot(catalog, deferredQuery), [catalog, deferredQuery]);
   const hits = matches.slice(0, HIT_LIMIT);
   const showList = open && Boolean(query.trim());
-
-  useEffect(() => {
-    setQuery(params.q ?? "");
-  }, [params.q]);
-
-  useEffect(() => {
-    setActive(0);
-  }, [deferredQuery]);
 
   useEffect(() => {
     function onPointer(event: MouseEvent) {

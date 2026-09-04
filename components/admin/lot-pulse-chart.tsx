@@ -83,13 +83,14 @@ export function LotPulseChart({ points, live }: { points: PulsePoint[]; live: Lo
   }, [points]);
 
   const averages = useMemo(() => rollingAverage(points), [points]);
-  const cumulative = useMemo(() => {
-    let running = 0;
-    return points.map((point) => {
-      running += point.ford + point.lincoln;
-      return running;
-    });
-  }, [points]);
+  const cumulative = useMemo(
+    () =>
+      points.reduce<number[]>((totals, point) => {
+        totals.push((totals.at(-1) ?? 0) + point.ford + point.lincoln);
+        return totals;
+      }, []),
+    [points],
+  );
 
   const dailyScale = niceMax(stats.bulk ? Math.max(stats.typicalMax, 4) : Math.max(stats.peakCount, ...averages, 1));
   const cumScale = niceMax(Math.max(stats.total, 1));

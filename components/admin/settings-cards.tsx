@@ -125,9 +125,16 @@ const fieldClass = "h-10 rounded-none border-input bg-white";
 
 export function ApiConnectorsCard({ connectors }: { connectors: ApiConnector[] }) {
   const [pending, startTransition] = useTransition();
-  const [checking, setChecking] = useState<Record<string, boolean>>({});
-  const [probes, setProbes] = useState<Record<string, Probe>>({});
   const connectorKey = connectors.map((connector) => connector.id).join(",");
+  const [checking, setChecking] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries(connectors.map((connector) => [connector.id, true])),
+  );
+  const [probes, setProbes] = useState<Record<string, Probe>>({});
+  const [seenKey, setSeenKey] = useState(connectorKey);
+  if (connectorKey !== seenKey) {
+    setSeenKey(connectorKey);
+    setChecking(Object.fromEntries(connectors.map((connector) => [connector.id, true])));
+  }
 
   function lightFor(id: string, hasEndpoint: boolean): Light {
     if (checking[id]) return "checking";
@@ -149,7 +156,6 @@ export function ApiConnectorsCard({ connectors }: { connectors: ApiConnector[] }
 
   useEffect(() => {
     let cancelled = false;
-    setChecking(Object.fromEntries(connectors.map((connector) => [connector.id, true])));
     void Promise.all(
       connectors.map(async (connector) => {
         const data = new FormData();
@@ -163,6 +169,8 @@ export function ApiConnectorsCard({ connectors }: { connectors: ApiConnector[] }
     return () => {
       cancelled = true;
     };
+    // Probe when the connector id set changes, not on every parent render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- connectorKey is the id set
   }, [connectorKey]);
 
   const summary = connectors.reduce(

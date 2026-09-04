@@ -1,35 +1,50 @@
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createDeskClient } from "@/lib/admin/session";
-import { AdminPanel } from "@/components/admin/admin-panel";
+import { PeopleDesk } from "@/components/admin/people-desk";
+import { buildPeopleDesk, type AuthAccount, type PeopleCustomer, type PeopleLead, type PeopleProfile, type PeopleTask } from "@/lib/admin/people";
 
-export default async function CustomersPage() {
+async function loadAuthAccounts() {
+  try {
+    const admin = createAdminClient();
+    const { data } = await admin.auth.admin.listUsers({ perPage: 200 });
+    const accounts: Record<string, AuthAccount> = {};
+    for (const user of data.users) {
+      accounts[user.id] = {
+        email: user.email ?? null,
+        lastSignInAt: user.last_sign_in_at ?? null,
+      };
+    }
+    return accounts;
+  } catch {
+    return {};
+  }
+}
+
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ view?: string }>;
+}) {
+  const { view } = await searchParams;
   const supabase = await createDeskClient();
-  const { data } = await supabase.from("customers").select("*").order("created_at", { ascending: false });
+  const [{ data: profiles }, { data: customers }, { data: leads }, { data: tasks }, accounts] = await Promise.all([
+    supabase.from("profiles").select("id, full_name, role, created_at").order("created_at", { ascending: true }),
+    supabase
+      .from("customers")
+      .select("id, first_name, last_name, email, phone, city, state, email_consent, sms_consent, created_at")
+      .order("created_at", { ascending: false }),
+    supabase.from("leads").select("id, customer_id, assigned_to, stage, type, created_at, updated_at"),
+    supabase.from("tasks").select("id, assigned_to, customer_id, completed_at"),
+    loadAuthAccounts(),
+  ]);
 
-  return (
-    <AdminPanel className="overflow-x-auto">
-      <table className="w-full text-left text-sm">
-        <thead className="border-b border-chrome bg-[#f7f8fa] text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-          <tr>
-            <th className="px-3 py-2.5">Name</th>
-            <th className="px-3 py-2.5">Email</th>
-            <th className="px-3 py-2.5">Phone</th>
-            <th className="px-3 py-2.5">Consent</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(data ?? []).map((row) => (
-            <tr key={row.id} className="border-b border-chrome/70 last:border-0">
-              <td className="px-3 py-2.5 font-medium">
-                {row.first_name} {row.last_name}
-              </td>
-              <td className="px-3 py-2.5">{row.email}</td>
-              <td className="px-3 py-2.5">{row.phone}</td>
-              <td className="px-3 py-2.5 text-muted-foreground">{row.email_consent ? "Email" : "—"}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {(data ?? []).length === 0 ? <p className="px-3 py-8 text-center text-sm text-muted-foreground">No customers yet.</p> : null}
-    </AdminPanel>
-  );
+  const data = buildPeopleDesk({
+    profiles: (profiles ?? []) as PeopleProfile[],
+    customers: (customers ?? []) as PeopleCustomer[],
+    leads: (leads ?? []) as PeopleLead[],
+    tasks: (tasks ?? []) as PeopleTask[],
+    accounts,
+  });
+
+  return <PeopleDesk data={data} view={view} />;
 }

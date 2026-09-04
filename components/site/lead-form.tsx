@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import Link from "next/link";
 import { submitPublicLead, type LeadState } from "@/app/actions/leads";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,12 +17,14 @@ export function LeadForm({
   type = "sales",
   brand,
   vehicleId,
+  channel,
   className,
   layout = "stack",
 }: {
   type?: LeadType;
   brand?: VehicleBrand;
   vehicleId?: string;
+  channel?: "contact" | "sales" | "service" | "finance" | "trade";
   className?: string;
   layout?: "stack" | "landscape";
 }) {
@@ -39,6 +42,7 @@ export function LeadForm({
       )}
     >
       <input type="hidden" name="type" value={type} />
+      {channel ? <input type="hidden" name="channel" value={channel} /> : <input type="hidden" name="channel" value={type === "sales" ? "contact" : type} />}
       {brand ? <input type="hidden" name="brand" value={brand} /> : null}
       {vehicleId ? <input type="hidden" name="vehicleId" value={vehicleId} /> : null}
       <div>
@@ -69,13 +73,13 @@ export function LeadForm({
         </label>
         <p className="text-xs text-muted-foreground">
           {t.submitAgree}{" "}
-          <a href="/privacy" className="font-medium text-ford hover:underline">
+          <Link href="/privacy" className="font-medium text-ford hover:underline">
             {t.privacy}
-          </a>{" "}
+          </Link>{" "}
           {locale === "es" ? "y" : "and"}{" "}
-          <a href="/terms" className="font-medium text-ford hover:underline">
+          <Link href="/terms" className="font-medium text-ford hover:underline">
             {t.terms}
-          </a>
+          </Link>
           .
         </p>
         {state.error ? (

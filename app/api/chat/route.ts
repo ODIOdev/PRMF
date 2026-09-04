@@ -11,16 +11,47 @@ import {
   supportStopWhen,
   supportTools,
 } from "@/lib/support";
+import { isVisitorKey, upsertChatThread } from "@/lib/support-inbox";
 
 export const maxDuration = 30;
+
+function lastUserText(messages: UIMessage[]) {
+  for (let i = messages.length - 1; i >= 0; i -= 1) {
+    const message = messages[i]!;
+    if (message.role !== "user") continue;
+    return message.parts
+      .filter((part) => part.type === "text" && "text" in part && part.text)
+      .map((part) => (part as { text: string }).text)
+      .join("")
+      .trim();
+  }
+  return "";
+}
 
 export async function POST(req: Request) {
   const body = await req.json();
   const messages = body.messages as UIMessage[];
   const locale = body.locale === "es" ? "es" : "en";
+  const visitorKey = typeof body.visitorKey === "string" ? body.visitorKey : "";
+  const threadId = typeof body.threadId === "string" ? body.threadId : undefined;
 
   if (!Array.isArray(messages) || messages.length === 0 || messages.length > 24) {
     return Response.json({ error: "Invalid messages." }, { status: 400 });
+  }
+
+  let savedId = threadId;
+  if (isVisitorKey(visitorKey)) {
+    const text = lastUserText(messages);
+    if (text) {
+      const thread = await upsertChatThread({
+        threadId,
+        visitorKey,
+        locale,
+        role: "visitor",
+        body: text,
+      });
+      savedId = thread?.id ?? threadId;
+    }
   }
 
   const result = streamText({
@@ -39,9 +70,25 @@ export async function POST(req: Request) {
         tags: ["feature:support-chat"],
       },
     },
+    async onFinish({ text }) {
+      const reply = text.trim();
+      if (!reply || !isVisitorKey(visitorKey) || !savedId) return;
+      await upsertChatThread({
+        threadId: savedId,
+        visitorKey,
+        locale,
+        role: "assist",
+        body: reply,
+        unreadForDesk: false,
+      });
+    },
   });
+
+  const headers = new Headers();
+  if (savedId) headers.set("x-thread-id", savedId);
 
   return createUIMessageStreamResponse({
     stream: toUIMessageStream({ stream: result.stream }),
+    headers,
   });
 }

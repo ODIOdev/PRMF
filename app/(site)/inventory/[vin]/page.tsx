@@ -73,7 +73,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ vin: s
             </div>
           ) : null}
         </div>
-        <LeadForm type="sales" brand={vehicle.brand} vehicleId={vehicle.id} />
+        <LeadForm type="sales" channel="sales" brand={vehicle.brand} vehicleId={vehicle.id} />
       </div>
     </div>
   );

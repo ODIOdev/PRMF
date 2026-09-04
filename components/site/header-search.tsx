@@ -12,31 +12,29 @@ export function HeaderSearch() {
   const root = useRef<HTMLFormElement>(null);
   const listId = useId();
   const [q, setQ] = useState("");
-  const [open, setOpen] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [active, setActive] = useState(0);
   const { hits, ready } = useInventoryHits(q);
-
-  useEffect(() => {
-    if (ready && q.trim()) {
-      setActive(0);
-      setOpen(true);
-    }
-  }, [ready, hits, q]);
+  const [prevQ, setPrevQ] = useState(q);
+  if (q !== prevQ) {
+    setPrevQ(q);
+    setActive(0);
+    setDismissed(false);
+  }
+  const showList = !dismissed && ready && Boolean(q.trim());
 
   useEffect(() => {
     function onPointer(event: MouseEvent) {
-      if (!root.current?.contains(event.target as Node)) setOpen(false);
+      if (!root.current?.contains(event.target as Node)) setDismissed(true);
     }
     window.addEventListener("mousedown", onPointer);
     return () => window.removeEventListener("mousedown", onPointer);
   }, []);
 
   function go(href: string) {
-    setOpen(false);
+    setDismissed(true);
     router.push(href);
   }
-
-  const showList = open && ready && Boolean(q.trim());
 
   return (
     <form
@@ -61,12 +59,15 @@ export function HeaderSearch() {
           type="search"
           autoComplete="off"
           value={q}
-          onChange={(event) => setQ(event.target.value)}
+          onChange={(event) => {
+            setDismissed(false);
+            setQ(event.target.value);
+          }}
           onFocus={() => {
-            if (ready && q.trim()) setOpen(true);
+            if (ready && q.trim()) setDismissed(false);
           }}
           onKeyDown={(event) => {
-            if (event.key === "Escape") setOpen(false);
+            if (event.key === "Escape") setDismissed(true);
             if (!showList || !hits.length) return;
             if (event.key === "ArrowDown") {
               event.preventDefault();
@@ -98,7 +99,7 @@ export function HeaderSearch() {
           active={active}
           emptyLabel={t.searchNoResults}
           onActive={setActive}
-          onNavigate={() => setOpen(false)}
+          onNavigate={() => setDismissed(true)}
           className="absolute top-[calc(100%+4px)] left-1/2 z-[60] w-full max-w-xl -translate-x-1/2"
         />
       ) : null}

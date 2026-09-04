@@ -24,11 +24,7 @@ export function useInventoryHits(q: string, brand = "", condition = "") {
 
   useEffect(() => {
     const query = q.trim();
-    if (query.length < 1) {
-      setHits([]);
-      setReady(false);
-      return;
-    }
+    if (query.length < 1) return;
 
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
@@ -59,6 +55,8 @@ export function useInventoryHits(q: string, brand = "", condition = "") {
     };
   }, [q, brand, condition]);
 
+  const query = q.trim();
+  if (query.length < 1) return { hits: [] as InventoryHit[], ready: false };
   return { hits, ready };
 }
 

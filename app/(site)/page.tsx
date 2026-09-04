@@ -269,7 +269,7 @@ export default async function HomePage() {
               </div>
               <SocialLinks className="md:self-end" links={socials} />
             </div>
-            <LeadForm type="sales" layout="landscape" className="p-5" />
+            <LeadForm type="sales" channel="contact" layout="landscape" className="p-5" />
           </div>
         </div>
       </section>
