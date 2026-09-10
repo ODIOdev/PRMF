@@ -1,18 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
-import { rememberSupabaseFailure, supabaseUnavailable } from "@/lib/supabase/availability";
+import { rememberSupabaseFailure, withSupabaseFallback } from "@/lib/supabase/availability";
 import type { Vehicle, VehicleBrand, VehicleCondition, VehicleStatus } from "@/lib/types";
 
 const emptyCounts = { ford: 0, lincoln: 0, newCount: 0, usedCount: 0 };
 
-async function withFallback<T>(fallback: T, run: () => Promise<T>): Promise<T> {
-  if (supabaseUnavailable()) return fallback;
-  try {
-    return await run();
-  } catch (error) {
-    rememberSupabaseFailure(error);
-    return fallback;
-  }
-}
+const withFallback = withSupabaseFallback;
 
 export type InventoryFilters = {
   brand?: VehicleBrand;
