@@ -7,7 +7,7 @@ export async function GET(request: Request) {
   if (!id || !isVisitorKey(visitorKey)) {
     return Response.json({ error: "Missing thread." }, { status: 400 });
   }
-  const thread = await getChatThread(id, visitorKey);
+  const thread = await getChatThread(id, visitorKey).catch(() => null);
   if (!thread) return Response.json({ error: "Not found." }, { status: 404 });
   return Response.json({
     id: thread.id,

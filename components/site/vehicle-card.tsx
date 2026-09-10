@@ -7,7 +7,7 @@ import { useLocale } from "@/components/site/locale-provider";
 
 export function VehicleCard({ vehicle }: { vehicle: Vehicle }) {
   const { t } = useLocale();
-  const image = vehicle.vehicle_images?.sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
+  const image = [...(vehicle.vehicle_images ?? [])].sort((a, b) => a.sort_order - b.sort_order)[0]?.url;
   const price = listingPrice(vehicle);
   const callForPrice = price == null;
   const discount =

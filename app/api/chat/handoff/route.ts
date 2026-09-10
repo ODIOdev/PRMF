@@ -23,23 +23,27 @@ export async function POST(request: Request) {
   const thread = await getChatThread(threadId, visitorKey);
   if (!thread) return Response.json({ error: "Not found." }, { status: 404 });
 
-  const supabase = createAdminClient();
-  const transcript = chatTranscript(thread);
-  const { data, error } = await supabase.rpc("submit_lead", {
-    p_first_name: firstName,
-    p_last_name: lastName,
-    p_email: email,
-    p_phone: phone,
-    p_message: `[chat]\nIntent: ${thread.intent}\n\n${transcript}`.slice(0, 4000),
-    p_type: leadTypeFromIntent(thread.intent),
-    p_brand: null,
-    p_vehicle_id: null,
-    p_email_consent: true,
-    p_sms_consent: true,
-  });
-  if (error) return Response.json({ error: "send_failed" }, { status: 500 });
+  try {
+    const supabase = createAdminClient();
+    const transcript = chatTranscript(thread);
+    const { data, error } = await supabase.rpc("submit_lead", {
+      p_first_name: firstName,
+      p_last_name: lastName,
+      p_email: email,
+      p_phone: phone,
+      p_message: `[chat]\nIntent: ${thread.intent}\n\n${transcript}`.slice(0, 4000),
+      p_type: leadTypeFromIntent(thread.intent),
+      p_brand: null,
+      p_vehicle_id: null,
+      p_email_consent: true,
+      p_sms_consent: true,
+    });
+    if (error) return Response.json({ error: "send_failed" }, { status: 503 });
 
-  const leadId = typeof data === "string" ? data : null;
-  await attachChatContact(threadId, visitorKey, { firstName, lastName, email, phone, leadId });
-  return Response.json({ ok: true, leadId });
+    const leadId = typeof data === "string" ? data : null;
+    await attachChatContact(threadId, visitorKey, { firstName, lastName, email, phone, leadId });
+    return Response.json({ ok: true, leadId });
+  } catch {
+    return Response.json({ error: "send_failed" }, { status: 503 });
+  }
 }

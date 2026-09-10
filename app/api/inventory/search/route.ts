@@ -32,8 +32,7 @@ export async function GET(request: Request) {
         price: formatUsd(listingPrice(vehicle)),
       })),
     });
-  } catch (error) {
-    console.error("inventory search failed", error);
-    return Response.json({ vehicles: [] }, { status: 500 });
+  } catch {
+    return Response.json({ vehicles: [] });
   }
 }

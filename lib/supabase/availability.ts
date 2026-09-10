@@ -52,7 +52,7 @@ export function rememberSupabaseFailure(error?: unknown) {
       : error && typeof error === "object" && "message" in error
         ? String((error as { message?: string }).message)
         : String(error ?? "");
-  if (/fetch failed|ENOTFOUND|ECONNREFUSED|EAI_AGAIN|getaddrinfo|AbortError|dns-timeout/i.test(text)) {
+  if (/fetch failed|ENOTFOUND|ECONNREFUSED|EAI_AGAIN|getaddrinfo|dns-timeout/i.test(text)) {
     skipUntil = Date.now() + UNAVAILABLE_MS;
   }
 }

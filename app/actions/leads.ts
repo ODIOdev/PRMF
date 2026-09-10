@@ -26,22 +26,25 @@ export async function submitPublicLead(_prev: LeadState, formData: FormData): Pr
       ? `[${channel}]${message ? `\n${message}` : ""}`
       : message;
 
-  const supabase = createAdminClient();
-  const { error } = await supabase.rpc("submit_lead", {
-    p_first_name: firstName,
-    p_last_name: lastName,
-    p_email: email,
-    p_phone: phone,
-    p_message: tagged,
-    p_type: type,
-    p_brand: brand,
-    p_vehicle_id: vehicleId,
-    p_email_consent: emailConsent,
-    p_sms_consent: false,
-  });
-
-  if (error) return { ok: false, error: "send_failed" };
-  return { ok: true };
+  try {
+    const supabase = createAdminClient();
+    const { error } = await supabase.rpc("submit_lead", {
+      p_first_name: firstName,
+      p_last_name: lastName,
+      p_email: email,
+      p_phone: phone,
+      p_message: tagged,
+      p_type: type,
+      p_brand: brand,
+      p_vehicle_id: vehicleId,
+      p_email_consent: emailConsent,
+      p_sms_consent: false,
+    });
+    if (error) return { ok: false, error: "send_failed" };
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "send_failed" };
+  }
 }
 
 export async function submitServiceSchedule(_prev: LeadState, formData: FormData): Promise<LeadState> {

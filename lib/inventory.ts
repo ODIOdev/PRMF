@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { rememberSupabaseFailure, withSupabaseFallback } from "@/lib/supabase/availability";
 import type { Vehicle, VehicleBrand, VehicleCondition, VehicleStatus } from "@/lib/types";
@@ -128,14 +129,16 @@ export async function searchVehicles(
   });
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
 export async function getVehicleByVin(vin: string) {
+  const segment = vin.trim();
+  if (!segment || !/^[A-Za-z0-9-]+$/.test(segment)) return null;
   return withFallback(null, async () => {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("vehicles")
-      .select("*, vehicle_images(*), vehicle_ratings(*)")
-      .eq("vin", vin)
-      .maybeSingle();
+    let query = supabase.from("vehicles").select("*, vehicle_images(*), vehicle_ratings(*)");
+    query = UUID_RE.test(segment) ? query.or(`vin.eq.${segment},id.eq.${segment}`) : query.eq("vin", segment);
+    const { data, error } = await query.maybeSingle();
     if (error) {
       rememberSupabaseFailure(error);
       return null;
@@ -161,7 +164,7 @@ export async function getFeaturedVehicles(limit = 6) {
   });
 }
 
-export async function getShopModels(brand?: VehicleBrand) {
+export const getShopModels = cache(async (brand?: VehicleBrand) => {
   return withFallback([], async () => {
     const supabase = await createClient();
     let query = supabase.from("vehicles").select("model").in("status", ["in_stock", "in_transit"]).not("model", "is", null);
@@ -173,7 +176,7 @@ export async function getShopModels(brand?: VehicleBrand) {
     }
     return [...new Set((data ?? []).map((row) => row.model).filter(Boolean) as string[])].sort();
   });
-}
+});
 
 export async function getInventoryCounts() {
   return withFallback(emptyCounts, async () => {

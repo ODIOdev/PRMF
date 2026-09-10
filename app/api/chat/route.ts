@@ -43,14 +43,18 @@ export async function POST(req: Request) {
   if (isVisitorKey(visitorKey)) {
     const text = lastUserText(messages);
     if (text) {
-      const thread = await upsertChatThread({
-        threadId,
-        visitorKey,
-        locale,
-        role: "visitor",
-        body: text,
-      });
-      savedId = thread?.id ?? threadId;
+      try {
+        const thread = await upsertChatThread({
+          threadId,
+          visitorKey,
+          locale,
+          role: "visitor",
+          body: text,
+        });
+        savedId = thread?.id ?? threadId;
+      } catch {
+        savedId = threadId;
+      }
     }
   }
 
@@ -73,14 +77,18 @@ export async function POST(req: Request) {
     async onFinish({ text }) {
       const reply = text.trim();
       if (!reply || !isVisitorKey(visitorKey) || !savedId) return;
-      await upsertChatThread({
-        threadId: savedId,
-        visitorKey,
-        locale,
-        role: "assist",
-        body: reply,
-        unreadForDesk: false,
-      });
+      try {
+        await upsertChatThread({
+          threadId: savedId,
+          visitorKey,
+          locale,
+          role: "assist",
+          body: reply,
+          unreadForDesk: false,
+        });
+      } catch {
+        /* chat reply still streams if inbox persistence is down */
+      }
     },
   });
 

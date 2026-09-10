@@ -8,7 +8,7 @@ export default async function VehiclePage({ params }: { params: Promise<{ vin: s
   const { vin } = await params;
   const vehicle = await getVehicleByVin(vin);
   if (!vehicle) notFound();
-  const images = (vehicle.vehicle_images ?? []).sort((a, b) => a.sort_order - b.sort_order);
+  const images = [...(vehicle.vehicle_images ?? [])].sort((a, b) => a.sort_order - b.sort_order);
   const price = listingPrice(vehicle);
   const callForPrice = price == null;
   const discount =

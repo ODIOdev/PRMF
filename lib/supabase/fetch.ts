@@ -1,4 +1,4 @@
-const FETCH_MS = 800;
+const FETCH_MS = 3000;
 
 export function fetchWithTimeout(input: RequestInfo | URL, init?: RequestInit) {
   const controller = new AbortController();

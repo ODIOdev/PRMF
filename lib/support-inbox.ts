@@ -133,9 +133,13 @@ export function parseChatThreads(value: unknown): ChatThread[] {
 }
 
 async function loadThreads(): Promise<ChatThread[]> {
-  const supabase = createAdminClient();
-  const { data } = await supabase.from("site_settings").select("value").eq("key", SUPPORT_CHATS_KEY).maybeSingle();
-  return parseChatThreads(data?.value);
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase.from("site_settings").select("value").eq("key", SUPPORT_CHATS_KEY).maybeSingle();
+    return parseChatThreads(data?.value);
+  } catch {
+    return [];
+  }
 }
 
 function mergeThreads(local: ChatThread[], remote: ChatThread[]) {
@@ -169,16 +173,20 @@ function mergeThreads(local: ChatThread[], remote: ChatThread[]) {
 }
 
 async function saveThreads(threads: ChatThread[]) {
-  const supabase = createAdminClient();
-  const { data } = await supabase.from("site_settings").select("value").eq("key", SUPPORT_CHATS_KEY).maybeSingle();
-  const merged = mergeThreads(threads, parseChatThreads(data?.value));
-  const { error } = await supabase.from("site_settings").upsert({
-    key: SUPPORT_CHATS_KEY,
-    value: { threads: merged },
-    updated_at: new Date().toISOString(),
-  });
-  if (error) throw new Error(error.message);
-  return merged;
+  try {
+    const supabase = createAdminClient();
+    const { data } = await supabase.from("site_settings").select("value").eq("key", SUPPORT_CHATS_KEY).maybeSingle();
+    const merged = mergeThreads(threads, parseChatThreads(data?.value));
+    const { error } = await supabase.from("site_settings").upsert({
+      key: SUPPORT_CHATS_KEY,
+      value: { threads: merged },
+      updated_at: new Date().toISOString(),
+    });
+    if (error) return threads;
+    return merged;
+  } catch {
+    return threads;
+  }
 }
 
 export async function listChatThreads() {
