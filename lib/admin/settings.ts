@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { rememberSupabaseFailure, withSupabaseFallback } from "@/lib/supabase/availability";
 import { dealership } from "@/lib/dealership";
 
 export type SiteSocial = {
@@ -39,18 +40,21 @@ export function parseConnectors(value: unknown): ApiConnector[] {
     .filter((row): row is ApiConnector => Boolean(row));
 }
 
+const defaultSocials: SiteSocial[] = dealership.socials.map((social, index) => ({
+  id: `default-${index}`,
+  name: social.name,
+  href: social.href,
+  sort_order: index,
+}));
+
 export const getSiteSocials = cache(async (): Promise<SiteSocial[]> => {
-  try {
+  return withSupabaseFallback(defaultSocials, async () => {
     const supabase = await createClient();
-    const { data } = await supabase.from("site_socials").select("id, name, href, sort_order").order("sort_order");
-    if (data?.length) return data;
-  } catch {
-    /* fall through */
-  }
-  return dealership.socials.map((social, index) => ({
-    id: `default-${index}`,
-    name: social.name,
-    href: social.href,
-    sort_order: index,
-  }));
+    const { data, error } = await supabase.from("site_socials").select("id, name, href, sort_order").order("sort_order");
+    if (error) {
+      rememberSupabaseFailure(error);
+      return defaultSocials;
+    }
+    return data?.length ? data : defaultSocials;
+  });
 });
